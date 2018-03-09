@@ -3,28 +3,25 @@ package utils;
 import java.util.LinkedList;
 import java.util.List;
 
-import utils.InstanceReflectionUtil.InitializingProcessor;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import static utils.InstanceReflectionUtil.FieldTraverser;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static utils.InstanceReflectionUtil.FieldTraverser;
 
 public class InstanceReflectionUtilTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
-    private FieldTraverser traverser = new FieldTraverser(new InitializingProcessor());
 
     @Test
     public void testBasicFieldsOverHierarchy()  {
         B instance = new B();
-        B processed = traverser.process(instance);
+        B processed = processInstance(instance);
 
 
         assertThat(processed.i, notNullValue());
@@ -34,7 +31,7 @@ public class InstanceReflectionUtilTest {
     @Test
     public void testBasicFieldsOverHierarchyWithStartClass()  {
         B instance = new B();
-        B processed = traverser.process(instance, A.class);
+        B processed = processInstance(instance, A.class);
 
 
         assertThat(processed.i, notNullValue());
@@ -44,7 +41,7 @@ public class InstanceReflectionUtilTest {
     @Test
     public void testInitializingLists()  {
         C instance = new C();
-        C processed = traverser.process(instance);
+        C processed = processInstance(instance);
 
         assertThat(processed.bList, notNullValue());
         assertThat(processed.bList.isEmpty(), is(false));
@@ -58,7 +55,7 @@ public class InstanceReflectionUtilTest {
     @Test
     public void testInitializingListsDeeply()  {
         C instance = new C();
-        C processed = traverser.process(instance);
+        C processed = processInstance(instance);
 
         assertThat(processed.bList, notNullValue());
         assertThat(processed.bList.isEmpty(), is(false));
@@ -71,14 +68,14 @@ public class InstanceReflectionUtilTest {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage("Unknown type of instances to be created.");
 
-        traverser.process(instance);
+        processInstance(instance);
     }
 
     @Test
     public void testInitializingClassWithSpecificList()  {
         ClassWithSpecificList instance = new ClassWithSpecificList();
 
-        ClassWithSpecificList actual = traverser.process(instance);
+        ClassWithSpecificList actual = processInstance(instance);
 
         Class<?> aClass = actual.bList.getClass();
         assertEquals(aClass, LinkedList.class);
@@ -88,7 +85,7 @@ public class InstanceReflectionUtilTest {
     public void testInitializingClassWithEnum()  {
         ClassWithEnum instance = new ClassWithEnum();
 
-        ClassWithEnum actual = traverser.process(instance);
+        ClassWithEnum actual = processInstance(instance);
 
 
         assertThat(actual.someEnum, notNullValue());
@@ -127,6 +124,18 @@ public class InstanceReflectionUtilTest {
 
     public static enum SomeEnum {
         A,B,C
+    }
+
+    //----------
+    private <T> T processInstance(T instance) {
+        new FieldTraverser<>(instance).accept(new InstanceReflectionUtil.InitializingTraverserNodeProcessor());
+        return instance;
+    }
+
+    private <T> T processInstance(T instance, Class<?> startClass) {
+        new FieldTraverser<>(instance, startClass)
+            .accept(new InstanceReflectionUtil.InitializingTraverserNodeProcessor());
+        return instance;
     }
 
 }

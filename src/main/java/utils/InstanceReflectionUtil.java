@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -43,11 +44,11 @@ public class InstanceReflectionUtil {
             //list have just one type argument.
             Type typeOfListElements = parameterizedType.get().getActualTypeArguments()[0];
 
-            List listItems = createItemsForList(typeOfListElements, traverserNode.getTraverser());
+            List listItems = createItemsForList(typeOfListElements);
             return instantiateList(classType, listItems);
         }
 
-        private List createItemsForList(Type typeOfListElements, Traverser traverser) {
+        private List createItemsForList(Type typeOfListElements) {
             //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
             int itemCount = 1+random.nextInt(5);
 
@@ -56,7 +57,8 @@ public class InstanceReflectionUtil {
                 try {
                     Object newInstance = ((Class) typeOfListElements).newInstance();
 
-                    traverser.process(newInstance);
+                    new FieldTraverser(newInstance).accept(new InitializingTraverserNodeProcessor());
+//                    traverser.process(newInstance);
 
                     //noinspection unchecked
                     result.add(newInstance);
@@ -198,11 +200,11 @@ public class InstanceReflectionUtil {
     }
     //</editor-fold>
 
-    public interface Processor {
-        void process(FieldTraverserNode node);
+    public interface TraverserNodeProcessor {
+        void process(TraverserNode node);
     }
 
-    public static class InitializingProcessor implements Processor {
+    public static class InitializingTraverserNodeProcessor implements TraverserNodeProcessor {
 
         private List<Initializer> initializers = Arrays.asList(new BooleanInitializer(),
                 new JavaUtilDateInitializer(),
@@ -213,7 +215,7 @@ public class InstanceReflectionUtil {
                 new ListInitializer());
 
         @Override
-        public void process(FieldTraverserNode node) {
+        public void process(TraverserNode node) {
             //TODO MM: decision whether to set primitive values, or all values or only null values
 //            if (node.getValue() == null) {
                 Class<?> classType = node.getClassType();
@@ -237,58 +239,54 @@ public class InstanceReflectionUtil {
         }
     }
 
-    public interface Traverser {
-
-        <T> T process(T instance);
-
-        <T> T process(T instance, Class<?> instanceClass);
+    public interface Element {
+        void accept(TraverserNodeProcessor processor);
     }
 
-    public static class FieldTraverser implements Traverser {
-        private final Processor processor;
+    public static class FieldTraverser<T> implements Element {
 
-        public FieldTraverser(Processor processor) {
-            this.processor = processor;
+        private final T instance;
+        private final Class<?> startClass;
+
+        public FieldTraverser(T instance) {
+            this(instance, instance.getClass());
         }
 
-        @Override
-        public <T> T process(T instance) {
-            return process(instance, instance.getClass());
-        }
+        public FieldTraverser(T instance, Class<?> startClass) {
+            this.instance = Objects.requireNonNull(instance);
+            this.startClass = Objects.requireNonNull(startClass);
 
-        @Override
-        public <T> T process(T instance, Class<?> startClass) {
             if (!startClass.isAssignableFrom(instance.getClass())) {
                 throw new IllegalArgumentException();
             }
+        }
+
+        @Override
+        public void accept(TraverserNodeProcessor processor) {
 
             Class<?> instanceClass = startClass;
             Class<Object> stopClazz = Object.class;
 
             do {
-                processFieldsInCurrentClass(instance, instanceClass);
+                processFieldsInCurrentClass(instanceClass, processor);
                 instanceClass = instanceClass.getSuperclass();
             } while (!instanceClass.isAssignableFrom(stopClazz));
-
-
-
-            return instance;
         }
 
-        private <T> void processFieldsInCurrentClass(T instance, Class<?> instanceClass) {
+        private void processFieldsInCurrentClass(Class<?> instanceClass, TraverserNodeProcessor processor) {
             Field[] fields = instanceClass.getDeclaredFields();
             FieldTraverserNode node = new FieldTraverserNode();
 
             for (Field field : fields) {
                 field.setAccessible(true);
-                node.setContext(field, instance, this);
+                node.setContext(field, instance);
 
-                processor.process(node);
+                node.accept(processor);
             }
         }
     }
 
-    private interface TraverserNode {
+    private interface TraverserNode extends Element{
         Object getValue();
 
         void setValue(Object value);
@@ -296,21 +294,22 @@ public class InstanceReflectionUtil {
         Class<?> getClassType();
 
         Optional<ParameterizedType> getParameterizedType();
-
-        Traverser getTraverser();
     }
 
     private static class FieldTraverserNode implements TraverserNode{
+
         private Field field;
         private Object instance;
-        private FieldTraverser fieldTraverser;
 
         public <T> void setContext(Field field,
-                                   Object instance,
-                                   FieldTraverser fieldTraverser) {
+                                   Object instance) {
             this.field = field;
             this.instance = instance;
-            this.fieldTraverser = fieldTraverser;
+        }
+
+        @Override
+        public void accept(TraverserNodeProcessor processor) {
+            processor.process(this);
         }
 
         @Override
@@ -345,24 +344,5 @@ public class InstanceReflectionUtil {
                 return Optional.empty();
             }
         }
-
-        @Override
-        public FieldTraverser getTraverser() {
-            return fieldTraverser;
-        }
     }
-
-//
-//    public static class Config {
-//        private Class<?> stopClass = Object.class;
-//
-//        public Class<?> getStopClass() {
-//            return stopClass;
-//        }
-//
-//        public void setStopClass(Class<?> stopClass) {
-//            this.stopClass = stopClass;
-//        }
-//    }
-
 }
