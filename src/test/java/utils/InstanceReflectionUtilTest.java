@@ -2,6 +2,7 @@ package utils;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import utils.InstanceReflectionUtil.InitializingProcessor;
 import org.junit.Rule;
@@ -85,6 +86,34 @@ public class InstanceReflectionUtilTest {
     }
 
     @Test
+    public void testInitializingClassWithSet()  {
+        ClassWithSet instance = new ClassWithSet();
+
+        ClassWithSet actual = traverser.process(instance);
+
+        Set<A> set = actual.set;
+        assertThat(set, notNullValue());
+        assertThat(set.isEmpty(), is(false));
+        for (A a : set) {
+            assertThat(a, notNullValue());
+        }
+    }
+
+    @Test
+    public void testInitializingClassWithArray()  {
+        ClassWithArray instance = new ClassWithArray();
+
+        ClassWithArray actual = traverser.process(instance);
+
+        A[] arr = actual.set;
+        assertThat(arr, notNullValue());
+        assertThat(arr.length > 0, is(true));
+        for (A a : arr) {
+            assertThat(a, notNullValue());
+        }
+    }
+
+    @Test
     public void testInitializingClassWithEnum()  {
         ClassWithEnum instance = new ClassWithEnum();
 
@@ -123,6 +152,14 @@ public class InstanceReflectionUtilTest {
 
     public static class ClassWithEnum {//TODO MM: implement
         public SomeEnum someEnum;
+    }
+
+    public static class ClassWithSet {
+        public Set<A> set;
+    }
+
+    public static class ClassWithArray {
+        public A[] set;
     }
 
     public static enum SomeEnum {

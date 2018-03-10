@@ -1,5 +1,6 @@
 package utils;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -7,9 +8,11 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -17,20 +20,8 @@ import java.util.stream.Collectors;
 public class InstanceReflectionUtil {
 
     //<editor-fold desc="SpecificInitializers">
-    private static class ListInitializer extends RandomInitializer {    //TODO MM: make superclass to allow extend this to set, array, etc.
-
-        @Override
-        public boolean canProvideValueFor(TraverserNode traverserNode) {
-            Class<?> classType = traverserNode.getClassType();
-            return List.class.isAssignableFrom(classType);
-        }
-
-        @Override
-        public Object generateRandomValue(TraverserNode traverserNode) {
-
-            Class<?> classType = traverserNode.getClassType();
-
-
+    private static abstract class RandomCollectionInitializerParent extends RandomInitializer {
+        protected Type typeOfListElements(TraverserNode traverserNode) {
             Optional<ParameterizedType> parameterizedType = traverserNode.getParameterizedType();
 
             if (!parameterizedType.isPresent()) {
@@ -41,18 +32,15 @@ public class InstanceReflectionUtil {
 
             //TODO MM: allow to specify subclasses to be instantiated as well.
             //list have just one type argument.
-            Type typeOfListElements = parameterizedType.get().getActualTypeArguments()[0];
-
-            List listItems = createItemsForList(typeOfListElements, traverserNode.getTraverser());
-            return instantiateList(classType, listItems);
+            return parameterizedType.get().getActualTypeArguments()[0];
         }
 
-        private List createItemsForList(Type typeOfListElements, Traverser traverser) {
+        protected List createItemsForCollection(Type typeOfListElements, Traverser traverser) {
             //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
-            int itemCount = 1+random.nextInt(5);
+            int itemCount = 1 + random.nextInt(5);
 
             List result = new ArrayList(itemCount);
-            for(int i = 0; i < itemCount; i++) {
+            for (int i = 0; i < itemCount; i++) {
                 try {
                     Object newInstance = ((Class) typeOfListElements).newInstance();
 
@@ -63,19 +51,23 @@ public class InstanceReflectionUtil {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-//                list.add(initRandomly(instance,, useNullWhereAllowed));
             }
 
             return result;
         }
 
-        private List instantiateList(Class<?> classType, List itemsForList) {
+        @Override
+        public Object generateRandomValue(TraverserNode traverserNode) {
+            Class<?> classType = traverserNode.getClassType();
+            List listItems = createItemsForCollection(typeOfListElements(traverserNode), traverserNode.getTraverser());
+            return instantiateCollection(classType, listItems);
+        }
+
+        private Object instantiateCollection(Class<?> classType, List itemsForList) {
             int modifiers = classType.getModifiers();
             boolean cannotInstantiateSpecificClass = classType.isInterface() || Modifier.isAbstract(modifiers);
             if (cannotInstantiateSpecificClass) {
-                //TODO MM: allow to specify which lists are created.
-                //noinspection unchecked
-                return new ArrayList(itemsForList);
+                return instantiateCollectionForInterface(classType, itemsForList);
             } else {
                 try {
                     List result = (List) classType.newInstance();
@@ -86,6 +78,72 @@ public class InstanceReflectionUtil {
                     throw new RuntimeException(e);
                 }
             }
+        }
+
+        protected abstract Object instantiateCollectionForInterface(Class<?> classType, List itemsForList);
+    }
+
+    private static class ListInitializer extends RandomCollectionInitializerParent {    //TODO MM: make superclass to allow extend this to set, array, etc.
+
+        @Override
+        public boolean canProvideValueFor(TraverserNode traverserNode) {
+            Class<?> classType = traverserNode.getClassType();
+            return List.class.isAssignableFrom(classType);
+        }
+
+        @Override
+        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) {
+            //TODO MM: allow to specify which lists are created.
+            //noinspection unchecked
+            return new ArrayList(itemsForList);
+        }
+    }
+
+    private static class SetInitializer extends RandomCollectionInitializerParent {
+
+        @Override
+        public boolean canProvideValueFor(TraverserNode traverserNode) {
+            Class<?> classType = traverserNode.getClassType();
+            return Set.class.isAssignableFrom(classType);
+        }
+
+        @Override
+        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) {
+            //TODO MM: allow to specify which set are created.
+            //noinspection unchecked
+            return new HashSet(itemsForList);
+        }
+    }
+
+    private static class ArraInitializer extends RandomCollectionInitializerParent {
+
+        @Override
+        public boolean canProvideValueFor(TraverserNode traverserNode) {
+            return traverserNode.getClassType().isArray();
+        }
+
+        @Override
+        public Object generateRandomValue(TraverserNode traverserNode) {
+            Class<?> typeOfArray = traverserNode.getClassType().getComponentType();
+
+            List listItems = createItemsForCollection(typeOfArray, traverserNode.getTraverser());
+
+            Object newArray = Array.newInstance(typeOfArray, listItems.size());
+            for(int i = 0; i < listItems.size(); i++) {
+                Array.set(newArray, i, listItems.get(i));
+            }
+
+            return newArray;
+        }
+
+        @Override
+        protected Type typeOfListElements(TraverserNode traverserNode) {
+            throw new UnsupportedOperationException("Should not be reachable");  //TODO MM: fix invalid hierarchy.
+        }
+
+        @Override
+        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) {
+            throw new UnsupportedOperationException("Should not be reachable");
         }
     }
 
@@ -210,7 +268,9 @@ public class InstanceReflectionUtil {
                 new IntInitializer(),
                 new StringInitializer(),
                 new EnumInitializer(),
-                new ListInitializer());
+                new ListInitializer(),
+                new SetInitializer(),
+                new ArraInitializer());
 
         @Override
         public void process(FieldTraverserNode node) {
