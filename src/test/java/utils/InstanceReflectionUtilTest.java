@@ -15,7 +15,9 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("Duplicates")
 public class InstanceReflectionUtilTest {
 
     @Rule
@@ -114,6 +116,68 @@ public class InstanceReflectionUtilTest {
     }
 
     @Test
+    public void testInitializingClassWithListsOfArrays()  {
+        ClassWithListsOfArray instance = new ClassWithListsOfArray();
+        ClassWithListsOfArray actual = traverser.process(instance);
+
+        List<A[]> listOfArrays = actual.listOfArrays;
+
+        assertThat(listOfArrays, notNullValue());
+        assertThat(listOfArrays.isEmpty(), is(false));
+
+        for (A[] arr : listOfArrays) {
+            assertThat(arr, notNullValue());
+            assertTrue(arr.length > 0);
+            for (A a : arr) {
+                assertThat(a, notNullValue());
+                assertThat(a.i, notNullValue());
+            }
+        }
+
+    }
+
+    @Test
+    public void testInitializingClassWithArraysOfLists()  {
+        ClassWithArrayOfLists instance = new ClassWithArrayOfLists();
+
+        ClassWithArrayOfLists classWithArrayOfLists = traverser.process(instance);
+
+        List<A>[] arrayOfLists = classWithArrayOfLists.arrayOfLists;
+
+        assertThat(arrayOfLists, notNullValue());
+        assertTrue(arrayOfLists.length > 0);
+
+        for (List<A> list : arrayOfLists) {
+            assertThat(list, notNullValue());
+            assertThat(list.isEmpty(), is(false));
+            for (A a : list) {
+                assertThat(a, notNullValue());
+                assertThat(a.i, notNullValue());
+            }
+        }
+    }
+
+    @Test
+    public void testInitializingClassWithListOfLists()  {
+        ClassWithListsOfLists instance = new ClassWithListsOfLists();
+
+        ClassWithListsOfLists classWithListsOfLists = traverser.process(instance);
+        List<List<A>> listOfLists = classWithListsOfLists.listOfLists;
+
+        assertThat(listOfLists, notNullValue());
+        assertThat(listOfLists.isEmpty(), is(false));
+
+        for (List<A> list : listOfLists) {
+            assertThat(list, notNullValue());
+            assertThat(list.isEmpty(), is(false));
+            for (A a : list) {
+                assertThat(a, notNullValue());
+                assertThat(a.i, notNullValue());
+            }
+        }
+    }
+
+    @Test
     public void testInitializingClassWithEnum()  {
         ClassWithEnum instance = new ClassWithEnum();
 
@@ -150,7 +214,7 @@ public class InstanceReflectionUtilTest {
         public LinkedList<? extends A> bList;
     }
 
-    public static class ClassWithEnum {//TODO MM: implement
+    public static class ClassWithEnum {
         public SomeEnum someEnum;
     }
 
@@ -162,7 +226,19 @@ public class InstanceReflectionUtilTest {
         public A[] set;
     }
 
-    public static enum SomeEnum {
+    public static class ClassWithArrayOfLists {
+        public List<A>[] arrayOfLists;
+    }
+
+    public static class ClassWithListsOfArray {
+        public List<A[]> listOfArrays;
+    }
+
+    public static class ClassWithListsOfLists {
+        public List<List<A>> listOfLists;
+    }
+
+    public enum SomeEnum {
         A,B,C
     }
 

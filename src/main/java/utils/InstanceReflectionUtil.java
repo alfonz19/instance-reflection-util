@@ -42,6 +42,7 @@ public class InstanceReflectionUtil {
             List result = new ArrayList(itemCount);
             for (int i = 0; i < itemCount; i++) {
                 try {
+                    //TODO MM: here cannot be simple instantiation, we have to go here through initialized detection again.
                     Object newInstance = ((Class) typeOfListElements).newInstance();
 
                     traverser.process(newInstance);
