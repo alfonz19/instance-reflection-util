@@ -186,7 +186,6 @@ public class InstanceReflectionUtilTest {
 
         ClassWithEnum actual = traverser.process(instance);
 
-
         assertThat(actual.someEnum, notNullValue());
     }
 
