@@ -239,7 +239,20 @@ public class InstanceReflectionUtil {
     //</editor-fold>
 
     //<editor-fold desc="InitializersDefinition">
-    protected static abstract class RandomInitializer implements Initializer {
+    protected static abstract class InitializerParent implements Initializer {
+        private Initializers initializers;
+
+        @Override
+        public void setInitializers(Initializers initializers) {
+           this.initializers = initializers;
+        }
+
+        public Initializers getInitializers() {
+            return initializers;
+        }
+    }
+
+    protected static abstract class RandomInitializer extends InitializerParent {
         protected static final Random random = new Random();
 
     }
@@ -273,6 +286,9 @@ public class InstanceReflectionUtil {
         Object generateRandomValue(Class<?> classType,
                                    Optional<ParameterizedType> parameterizedType,
                                    FieldTraverser traverser);
+
+        /** sets reference to all initializers known to system, in order to be able to do composite initializations. Example: when you initializing list, which contains sets of integers. So you need to initialize list, for each item new set, and for each set several integers */
+        void setInitializers(Initializers initializers);
     }
     //</editor-fold>
 
@@ -298,15 +314,22 @@ public class InstanceReflectionUtil {
     }
 
     public static class Initializers {
-        private List<Initializer> initializers = Arrays.asList(new BooleanInitializer(),
-                new JavaUtilDateInitializer(),
-                new UuidInitializer(),
-                new IntInitializer(),
-                new StringInitializer(),
-                new EnumInitializer(),
-                new ListInitializer(),
-                new SetInitializer(),
-                new ArraInitializer());
+        private List<Initializer> initializers = createInitializers();
+
+        private List<Initializer> createInitializers() {
+            List<Initializer> result = Arrays.asList(new BooleanInitializer(),
+                    new JavaUtilDateInitializer(),
+                    new UuidInitializer(),
+                    new IntInitializer(),
+                    new StringInitializer(),
+                    new EnumInitializer(),
+                    new ListInitializer(),
+                    new SetInitializer(),
+                    new ArraInitializer());
+
+            result.forEach(e->e.setInitializers(this));
+            return result;
+        }
 
         public Initializer getSoleInitializer(Class<?> classType,
                                               Optional<ParameterizedType> parameterizedType) {
