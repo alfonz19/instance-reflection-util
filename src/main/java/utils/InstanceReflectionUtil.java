@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -21,17 +20,19 @@ public class InstanceReflectionUtil {
 
     //<editor-fold desc="SpecificInitializers">
     private static abstract class RandomCollectionInitializerParent extends RandomInitializer {
-        protected Type typeOfListElements(Optional<ParameterizedType> parameterizedType) {
+        protected Type typeOfListElements(Type genericType) {
+            if (genericType instanceof Class) {
+                throw new RuntimeException("Unknown type of instances to be created.");
+            } else if (genericType instanceof ParameterizedType) {
+                //TODO MM: allow to specify subclasses to be instantiated as well.
 
-            if (!parameterizedType.isPresent()) {
-                //TODO MM: allow to specify global values for not parameterized lists. Also allow to override it per field. Also allow to specify which values should we select from per individual field.
+                ParameterizedType parameterizedType = (ParameterizedType) genericType;
+
+                //lists have just one type parameter. //TODO MM: reuse for maps etc.
+                return parameterizedType.getActualTypeArguments()[0];
+            } else {
                 throw new RuntimeException("Unknown type of instances to be created.");
             }
-
-
-            //TODO MM: allow to specify subclasses to be instantiated as well.
-            //list have just one type argument.
-            return parameterizedType.get().getActualTypeArguments()[0];
         }
 
         protected List createItemsForCollection(Type typeOfListElements, Traverser traverser) {
@@ -57,10 +58,8 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
-            List listItems = createItemsForCollection(typeOfListElements(parameterizedType), traverser);
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
+            List listItems = createItemsForCollection(typeOfListElements(genericType), traverser);
             return instantiateCollection(classType, listItems);
         }
 
@@ -87,8 +86,7 @@ public class InstanceReflectionUtil {
     private static class ListInitializer extends RandomCollectionInitializerParent {    //TODO MM: make superclass to allow extend this to set, array, etc.
 
         @Override
-        public boolean canProvideValueFor(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType) {
+        public boolean canProvideValueFor(Class<?> classType, Type genericType) {
             return List.class.isAssignableFrom(classType);
         }
 
@@ -103,8 +101,7 @@ public class InstanceReflectionUtil {
     private static class SetInitializer extends RandomCollectionInitializerParent {
 
         @Override
-        public boolean canProvideValueFor(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType) {
+        public boolean canProvideValueFor(Class<?> classType, Type genericType) {
             return Set.class.isAssignableFrom(classType);
         }
 
@@ -119,15 +116,12 @@ public class InstanceReflectionUtil {
     private static class ArraInitializer extends RandomCollectionInitializerParent {
 
         @Override
-        public boolean canProvideValueFor(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType) {
+        public boolean canProvideValueFor(Class<?> classType, Type genericType) {
             return classType.isArray();
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             Class<?> typeOfArray = classType.getComponentType();
 
             List listItems = createItemsForCollection(typeOfArray, traverser);
@@ -141,7 +135,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        protected Type typeOfListElements(Optional<ParameterizedType> parameterizedType) {
+        protected Type typeOfListElements(Type genericType) {
             throw new UnsupportedOperationException("Should not be reachable");  //TODO MM: fix invalid hierarchy.
         }
 
@@ -159,24 +153,19 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             return random.nextInt();
         }
     }
 
     private static class EnumInitializer extends RandomInitializer {
         @Override
-        public boolean canProvideValueFor(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType) {
+        public boolean canProvideValueFor(Class<?> classType, Type genericType) {
             return classType.isEnum();
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             Object[] values = classType.getEnumConstants();
             return values[random.nextInt(values.length)];
         }
@@ -188,9 +177,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             return random.nextBoolean();
         }
     }
@@ -201,9 +188,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             int date = random.nextInt();
             date = date < 0 ? -1 * date : date;
             return new Date(date);
@@ -216,9 +201,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             return UUID.randomUUID();
         }
     }
@@ -229,9 +212,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType,
-                                          FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser) {
             return "RandomString: " + Long.toString(random.nextLong());
         }
     }
@@ -275,17 +256,14 @@ public class InstanceReflectionUtil {
 //        }
 
         @Override
-        public boolean canProvideValueFor(Class<?> classType,
-                                          Optional<ParameterizedType> parameterizedType) {
+        public boolean canProvideValueFor(Class<?> classType, Type genericType) {
             return classes.contains(classType);
         }
     }
 
     private interface Initializer {
-        boolean canProvideValueFor(Class<?> classType, Optional<ParameterizedType> parameterizedType);
-        Object generateRandomValue(Class<?> classType,
-                                   Optional<ParameterizedType> parameterizedType,
-                                   FieldTraverser traverser);
+        boolean canProvideValueFor(Class<?> classType, Type genericType);
+        Object generateRandomValue(Class<?> classType, Type genericType, FieldTraverser traverser);
 
         /** sets reference to all initializers known to system, in order to be able to do composite initializations. Example: when you initializing list, which contains sets of integers. So you need to initialize list, for each item new set, and for each set several integers */
         void setInitializers(Initializers initializers);
@@ -306,9 +284,9 @@ public class InstanceReflectionUtil {
 //            if (node.getValue() == null) {
                 Class<?> classType = node.getClassType();
 
-            Initializer initializer = initializers.getSoleInitializer(classType, node.getParameterizedType());
+            Initializer initializer = initializers.getSoleInitializer(classType, node.getGenericType());
 
-            node.setValue(initializer.generateRandomValue(node.getClassType(), node.getParameterizedType(), node.getTraverser()));
+            node.setValue(initializer.generateRandomValue(node.getClassType(), node.getGenericType(), node.getTraverser()));
 //            }
         }
     }
@@ -331,10 +309,9 @@ public class InstanceReflectionUtil {
             return result;
         }
 
-        public Initializer getSoleInitializer(Class<?> classType,
-                                              Optional<ParameterizedType> parameterizedType) {
+        public Initializer getSoleInitializer(Class<?> classType, Type genericType) {
             List<Initializer> suitableInitializers = initializers.stream()
-                    .filter(e -> e.canProvideValueFor(classType, parameterizedType))
+                    .filter(e -> e.canProvideValueFor(classType, genericType))
                     .collect(Collectors.toList());
 
 
@@ -410,7 +387,7 @@ public class InstanceReflectionUtil {
 
         Class<?> getClassType();
 
-        Optional<ParameterizedType> getParameterizedType();
+        Type getGenericType();
 
         Traverser getTraverser();
     }
@@ -452,13 +429,8 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Optional<ParameterizedType> getParameterizedType() {
-            Type genericType = field.getGenericType();
-            if (genericType instanceof ParameterizedType) {
-                return Optional.of(((ParameterizedType) genericType));
-            } else {
-                return Optional.empty();
-            }
+        public Type getGenericType() {
+            return field.getGenericType();
         }
 
         @Override
