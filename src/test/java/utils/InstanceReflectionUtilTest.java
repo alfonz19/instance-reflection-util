@@ -4,12 +4,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import utils.InstanceReflectionUtil.InitializingProcessor;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import static utils.InstanceReflectionUtil.FieldTraverser;
+import utils.InstanceReflectionUtil.FieldTraverser;
+import utils.InstanceReflectionUtil.InitializingProcessor;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
