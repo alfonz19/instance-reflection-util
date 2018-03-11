@@ -281,7 +281,23 @@ public class InstanceReflectionUtil {
     }
 
     public static class InitializingProcessor implements Processor {
+        private final Initializers initializers = new Initializers();
 
+
+        @Override
+        public void process(FieldTraverserNode node) {
+            //TODO MM: decision whether to set primitive values, or all values or only null values
+//            if (node.getValue() == null) {
+                Class<?> classType = node.getClassType();
+
+            Initializer initializer = initializers.getSoleInitializer(classType, node.getParameterizedType());
+
+            node.setValue(initializer.generateRandomValue(node.getClassType(), node.getParameterizedType(), node.getTraverser()));
+//            }
+        }
+    }
+
+    public static class Initializers {
         private List<Initializer> initializers = Arrays.asList(new BooleanInitializer(),
                 new JavaUtilDateInitializer(),
                 new UuidInitializer(),
@@ -292,28 +308,24 @@ public class InstanceReflectionUtil {
                 new SetInitializer(),
                 new ArraInitializer());
 
-        @Override
-        public void process(FieldTraverserNode node) {
-            //TODO MM: decision whether to set primitive values, or all values or only null values
-//            if (node.getValue() == null) {
-                Class<?> classType = node.getClassType();
-                List<Initializer> suitableInitializers = initializers.stream()
-                    .filter(e -> e.canProvideValueFor(node.getClassType(), node.getParameterizedType()))
+        public Initializer getSoleInitializer(Class<?> classType,
+                                              Optional<ParameterizedType> parameterizedType) {
+            List<Initializer> suitableInitializers = initializers.stream()
+                    .filter(e -> e.canProvideValueFor(classType, parameterizedType))
                     .collect(Collectors.toList());
 
 
-                //TODO MM: allow to configure.
-                if (suitableInitializers.isEmpty()) {
-                    throw new IllegalStateException("Unknown initializer for type: " + classType.getName());
-                }
+            //TODO MM: allow to configure.
+            if (suitableInitializers.isEmpty()) {
+                throw new IllegalStateException("Unknown initializer for type: " + classType.getName());
+            }
 
-                if (suitableInitializers.size() > 1) {
-                    throw new IllegalStateException("Multiple initializers for type: " + classType.getName());
-                }
+            if (suitableInitializers.size() > 1) {
+                throw new IllegalStateException("Multiple initializers for type: " + classType.getName());
+            }
 
-                Initializer initializer = suitableInitializers.get(0);
-                node.setValue(initializer.generateRandomValue(node.getClassType(), node.getParameterizedType(), node.getTraverser()));
-//            }
+            Initializer initializer = suitableInitializers.get(0);
+            return initializer;
         }
     }
 
