@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -115,7 +114,7 @@ public class InstanceReflectionUtilTest {
         }
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void testInitializingClassWithListsOfArrays()  {
         ClassWithListsOfArray instance = new ClassWithListsOfArray();
@@ -137,7 +136,7 @@ public class InstanceReflectionUtilTest {
 
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void testInitializingClassWithArraysOfLists()  {
         ClassWithArrayOfLists instance = new ClassWithArrayOfLists();
@@ -159,7 +158,6 @@ public class InstanceReflectionUtilTest {
         }
     }
 
-    @Ignore
     @Test
     public void testInitializingClassWithListOfLists()  {
         ClassWithListsOfLists instance = new ClassWithListsOfLists();

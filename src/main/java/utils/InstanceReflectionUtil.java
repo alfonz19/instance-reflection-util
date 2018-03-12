@@ -1,7 +1,9 @@
 package utils;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -15,12 +17,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class InstanceReflectionUtil {
 
+    private static final Logger log = LogManager.getLogger(InstanceReflectionUtil.class);
+
     //<editor-fold desc="SpecificInitializers">
-    private static abstract class RandomCollectionInitializerParent extends RandomInitializer {
-        protected Type typeOfListElements(Type genericType) {
+    private static abstract class RandomCollectionInitializerParent extends RandomInitializer {//TODO MM: rename to Array-like collection
+        private Type typeOfListElements(Type genericType) {
             if (genericType instanceof Class) {
                 throw new RuntimeException("Unknown type of instances to be created.");
             } else if (genericType instanceof ParameterizedType) {
@@ -30,6 +37,9 @@ public class InstanceReflectionUtil {
 
                 //lists have just one type parameter. //TODO MM: reuse for maps etc.
                 return parameterizedType.getActualTypeArguments()[0];
+            } else if (genericType instanceof GenericArrayType) {
+                GenericArrayType genericArrayType = (GenericArrayType) genericType;
+                return genericArrayType.getGenericComponentType();
             } else {
                 throw new RuntimeException("Unknown type of instances to be created.");
             }
@@ -42,10 +52,9 @@ public class InstanceReflectionUtil {
             List result = new ArrayList(itemCount);
             for (int i = 0; i < itemCount; i++) {
                 try {
-                    //TODO MM: here cannot be simple instantiation, we have to go here through initialized detection again.
-                    Object newInstance = ((Class) typeOfListElements).newInstance();
+                    Initializer initializer = this.getInitializers().getSoleInitializer(GenericType.getClassType(typeOfListElements), typeOfListElements);
 
-                    traverser.process(newInstance);
+                    Object newInstance = initializer.generateRandomValue(GenericType.getClassType(typeOfListElements), typeOfListElements, traverser);//TODO MM: rename — remove word random.
 
                     //noinspection unchecked
                     result.add(newInstance);
@@ -58,20 +67,19 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
             List listItems = createItemsForCollection(typeOfListElements(genericType), traverser);
-            return instantiateCollection(genericType, listItems);
+            return instantiateCollection(type, listItems);
         }
 
-        private Object instantiateCollection(Type genericType, List itemsForList) {
-            Class<?> classType = GenericType.getClassType(genericType);
-            int modifiers = classType.getModifiers();
-            boolean cannotInstantiateSpecificClass = classType.isInterface() || Modifier.isAbstract(modifiers);
+        private Object instantiateCollection(Class<?> type, List itemsForList) {
+            int modifiers = type.getModifiers();
+            boolean cannotInstantiateSpecificClass = type.isInterface() || Modifier.isAbstract(modifiers);
             if (cannotInstantiateSpecificClass) {
-                return instantiateCollectionForInterface(classType, itemsForList);
+                return instantiateCollectionForInterface(type, itemsForList);
             } else {
                 try {
-                    List result = (List) classType.newInstance();
+                    List result = (List) type.newInstance();
                     //noinspection unchecked
                     result.addAll(itemsForList);
                     return result;
@@ -87,8 +95,8 @@ public class InstanceReflectionUtil {
     private static class ListInitializer extends RandomCollectionInitializerParent {    //TODO MM: make superclass to allow extend this to set, array, etc.
 
         @Override
-        public boolean canProvideValueFor(Type genericType) {
-            return List.class.isAssignableFrom(GenericType.getClassType(genericType));
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return List.class.isAssignableFrom(type);
         }
 
         @Override
@@ -102,8 +110,8 @@ public class InstanceReflectionUtil {
     private static class SetInitializer extends RandomCollectionInitializerParent {
 
         @Override
-        public boolean canProvideValueFor(Type genericType) {
-            return Set.class.isAssignableFrom(GenericType.getClassType(genericType));
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return Set.class.isAssignableFrom(type);
         }
 
         @Override
@@ -117,17 +125,17 @@ public class InstanceReflectionUtil {
     private static class ArraInitializer extends RandomCollectionInitializerParent {
 
         @Override
-        public boolean canProvideValueFor(Type genericType) {
-            return GenericType.getClassType(genericType).isArray();
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return type.isArray();
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
-            Class<?> typeOfArray = GenericType.getClassType(genericType).getComponentType();
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+            Type typeOfArrayItems = GenericType.getTypeOfArrayElements(genericType);
 
-            List listItems = createItemsForCollection(typeOfArray, traverser);
+            List listItems = createItemsForCollection(typeOfArrayItems, traverser);
 
-            Object newArray = Array.newInstance(typeOfArray, listItems.size());
+            Object newArray = Array.newInstance(GenericType.getClassType(typeOfArrayItems), listItems.size());
             for(int i = 0; i < listItems.size(); i++) {
                 Array.set(newArray, i, listItems.get(i));
             }
@@ -136,12 +144,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        protected Type typeOfListElements(Type genericType) {
-            throw new UnsupportedOperationException("Should not be reachable");  //TODO MM: fix invalid hierarchy.
-        }
-
-        @Override
-        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) {
+        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) { //TODO MM: fix invalid hierarchy.
             throw new UnsupportedOperationException("Should not be reachable");
         }
     }
@@ -154,20 +157,20 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
             return random.nextInt();
         }
     }
 
     private static class EnumInitializer extends RandomInitializer {
         @Override
-        public boolean canProvideValueFor(Type genericType) {
-            return GenericType.getClassType(genericType).isEnum();
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return type.isEnum();
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
-            Object[] values = GenericType.getClassType(genericType).getEnumConstants();
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+            Object[] values = type.getEnumConstants();
             return values[random.nextInt(values.length)];
         }
     }
@@ -178,7 +181,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
             return random.nextBoolean();
         }
     }
@@ -189,7 +192,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
             int date = random.nextInt();
             date = date < 0 ? -1 * date : date;
             return new Date(date);
@@ -202,7 +205,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
             return UUID.randomUUID();
         }
     }
@@ -213,7 +216,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Type genericType, FieldTraverser traverser) {
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
             return "RandomString: " + Long.toString(random.nextLong());
         }
     }
@@ -225,12 +228,36 @@ public class InstanceReflectionUtil {
         private Initializers initializers;
 
         @Override
-        public void setInitializers(Initializers initializers) {
+        public final void setInitializers(Initializers initializers) {
            this.initializers = initializers;
         }
 
         public Initializers getInitializers() {
             return initializers;
+        }
+    }
+
+    private static class DefaultConstructorInitializer extends InitializerParent {
+
+        @Override
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            try {
+                type.getConstructor();
+                return true;
+            } catch(Exception e) {
+                return false;
+            }
+        }
+
+        @Override
+        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+            try {
+                Constructor<?> publicNoArgConstructor = type.getConstructor();
+                Object instance = publicNoArgConstructor.newInstance();
+                return traverser.process(instance);
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -252,14 +279,14 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public boolean canProvideValueFor(Type genericType) {
-            return classes.contains(GenericType.getClassType(genericType));
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return classes.contains(type);
         }
     }
 
     private interface Initializer {
-        boolean canProvideValueFor(Type genericType);
-        Object generateRandomValue(Type genericType, FieldTraverser traverser);
+        boolean canProvideValueFor(Class<?> type, Type genericType);
+        Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser);
 
         /** sets reference to all initializers known to system, in order to be able to do composite initializations. Example: when you initializing list, which contains sets of integers. So you need to initialize list, for each item new set, and for each set several integers */
         void setInitializers(Initializers initializers);
@@ -278,9 +305,9 @@ public class InstanceReflectionUtil {
         public void process(FieldTraverserNode node) {
             //TODO MM: decision whether to set primitive values, or all values or only null values
 //            if (node.getValue() == null) {
-            Initializer initializer = initializers.getSoleInitializer(node.getGenericType());
+            Initializer initializer = initializers.getSoleInitializer(node.getType(), node.getGenericType());
 
-            node.setValue(initializer.generateRandomValue(node.getGenericType(), node.getTraverser()));
+            node.setValue(initializer.generateRandomValue(node.getType(), node.getGenericType(), node.getTraverser()));
 //            }
         }
     }
@@ -289,23 +316,27 @@ public class InstanceReflectionUtil {
         private List<Initializer> initializers = createInitializers();
 
         private List<Initializer> createInitializers() {
-            List<Initializer> result = Arrays.asList(new BooleanInitializer(),
+            List<Initializer> result = Arrays.asList(
+                    new ListInitializer(),
+                    new SetInitializer(),
+                    new ArraInitializer(),
+                    
+                    new BooleanInitializer(),
                     new JavaUtilDateInitializer(),
                     new UuidInitializer(),
                     new IntInitializer(),
                     new StringInitializer(),
                     new EnumInitializer(),
-                    new ListInitializer(),
-                    new SetInitializer(),
-                    new ArraInitializer());
+
+                    new DefaultConstructorInitializer());
 
             result.forEach(e->e.setInitializers(this));
             return result;
         }
 
-        public Initializer getSoleInitializer(Type genericType) {
+        public Initializer getSoleInitializer(Class<?> type, Type genericType) {
             List<Initializer> suitableInitializers = initializers.stream()
-                    .filter(e -> e.canProvideValueFor(genericType))
+                    .filter(e -> e.canProvideValueFor(type, genericType))
                     .collect(Collectors.toList());
 
 
@@ -314,9 +345,9 @@ public class InstanceReflectionUtil {
                 throw new IllegalStateException("Unknown initializer for type: " + genericType.getTypeName());
             }
 
-            if (suitableInitializers.size() > 1) {
-                throw new IllegalStateException("Multiple initializers for type: " + genericType.getTypeName());
-            }
+//            if (suitableInitializers.size() > 1) {
+//                throw new IllegalStateException("Multiple initializers for type: " + genericType.getTypeName());
+//            }
 
             Initializer initializer = suitableInitializers.get(0);
             return initializer;
@@ -381,6 +412,8 @@ public class InstanceReflectionUtil {
 
         Type getGenericType();
 
+        Class<?> getType();
+
         Traverser getTraverser();
     }
 
@@ -410,7 +443,7 @@ public class InstanceReflectionUtil {
         public void setValue(Object value) {
             try {
                 field.set(instance, value);
-            } catch (IllegalAccessException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -418,6 +451,11 @@ public class InstanceReflectionUtil {
         @Override
         public Type getGenericType() {
             return field.getGenericType();
+        }
+
+        @Override
+        public Class<?> getType() {
+            return field.getType();
         }
 
         @Override
@@ -432,6 +470,40 @@ public class InstanceReflectionUtil {
                 return (Class) genericType;
             } else if (genericType instanceof ParameterizedType) {
                 return (Class)((ParameterizedType)genericType).getRawType();
+            } else if (genericType instanceof GenericArrayType) {
+                GenericArrayType genericArrayType = (GenericArrayType) genericType;
+                Type genericComponentType = genericArrayType.getGenericComponentType();
+                if (genericComponentType instanceof ParameterizedType) {
+                    //hack to get classType of Array from generic type. There's no way how to do that
+                    //so we create here new array based on generic type and use that instance to get class type.
+                    //this is far from ideal, thus one should avoid using this method if possible for finding out
+                    //class type of array from generic type.
+                    log.warn("Used inefficient query to get array class type.");
+                    return Array.newInstance((Class)((ParameterizedType)genericArrayType.getGenericComponentType()).getRawType(), 0).getClass();
+                } else {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+            } else {
+                throw new UnsupportedOperationException("Not implemented yet");
+            }
+        }
+
+        public static boolean isArray(Type genericType) {
+            if (genericType instanceof Class) {
+                return ((Class)genericType).isArray();
+            } else if (genericType instanceof GenericArrayType) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public static Type getTypeOfArrayElements(Type genericType) {
+            if (genericType instanceof Class) {
+                return ((Class)genericType).getComponentType();
+            } else if (genericType instanceof GenericArrayType) {
+                GenericArrayType genericArrayType = (GenericArrayType) genericType;
+                return genericArrayType.getGenericComponentType();
             } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
