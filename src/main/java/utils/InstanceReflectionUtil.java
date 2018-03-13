@@ -92,8 +92,7 @@ public class InstanceReflectionUtil {
         protected abstract Object instantiateCollectionForInterface(Class<?> classType, List itemsForList);
     }
 
-    private static class ListInitializer extends ArrayLikeInitializerParent {    //TODO MM: make superclass to allow extend this to set, array, etc.
-
+    private static class ListInitializer extends ArrayLikeInitializerParent {
         @Override
         public boolean canProvideValueFor(Class<?> type, Type genericType) {
             return List.class.isAssignableFrom(type);
