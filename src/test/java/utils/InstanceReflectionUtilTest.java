@@ -1,9 +1,11 @@
 package utils;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hamcrest.CoreMatchers;
@@ -12,10 +14,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import utils.InstanceReflectionUtil.FieldTraverser;
 import utils.InstanceReflectionUtil.InitializingProcessor;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -244,6 +248,49 @@ public class InstanceReflectionUtilTest {
         assertThat(actual.someEnum, notNullValue());
     }
 
+    @Test
+    public void testClassWithMap()  {
+        ClassWithMap process = traverser.process(new ClassWithMap());
+        Map<String, String> map = process.map;
+        assertThat(map, notNullValue());
+
+        assertThat(map.isEmpty(), is(false));
+
+        for (Map.Entry<String, String> e : map.entrySet()) {
+            assertThat(e.getKey(), notNullValue());
+            assertThat(e.getValue(), notNullValue());
+        }
+    }
+
+    @Test
+    public void testClassWithMapWithArrays()  {
+        ClassWithMapWithArrays process = traverser.process(new ClassWithMapWithArrays());
+        HashMap<Integer[], List<String>[]> map = process.map;
+        assertThat(map, notNullValue());
+
+        assertThat(map.isEmpty(), is(false));
+
+        for (Map.Entry<Integer[], List<String>[]> e : map.entrySet()) {
+            Integer[] key = e.getKey();
+            assertThat(key, notNullValue());
+            assertThat(key.length, greaterThan(0));
+            for (Integer intVal : key) {
+                assertThat(intVal, notNullValue());
+            }
+
+            List<String>[] value = e.getValue();
+            assertThat(value, notNullValue());
+            assertThat(value.length, greaterThan(0));
+            for (List<String> listOfStrings : value) {
+                assertThat(listOfStrings, notNullValue());
+                assertThat(listOfStrings.isEmpty(), is(false));
+                for (String str : listOfStrings) {
+                    assertThat(str, notNullValue());
+                }
+            }
+
+        }
+    }
     //--------------------------------------------------
 
     public static class A {
@@ -265,6 +312,14 @@ public class InstanceReflectionUtilTest {
 
     public static class ClassWithIterable {
         public Iterable<B> iterable;
+    }
+
+    public static class ClassWithMap {
+        public Map<String, String> map;
+    }
+
+    public static class ClassWithMapWithArrays {
+        public HashMap<Integer[], List<String>[]> map;
     }
 
     public static class ClassWithUntypedList {

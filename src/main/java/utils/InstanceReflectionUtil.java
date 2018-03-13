@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -27,13 +29,14 @@ import org.apache.logging.log4j.Logger;
 public class InstanceReflectionUtil {
 
     private static final Logger log = LogManager.getLogger(InstanceReflectionUtil.class);
+    public static final int MAX_ITEMS_TO_CREATE_IN_COLLECTIONS = 5;
 
     //<editor-fold desc="SpecificInitializers">
     private static abstract class ArrayLikeInitializerParent extends RandomInitializer {
 
         protected List createItemsForCollection(Type typeOfListElements, Traverser traverser) {
             //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
-            int itemCount = 1 + random.nextInt(5);
+            int itemCount = 1 + random.nextInt(MAX_ITEMS_TO_CREATE_IN_COLLECTIONS);
 
             List result = new ArrayList(itemCount);
             for (int i = 0; i < itemCount; i++) {
@@ -100,6 +103,58 @@ public class InstanceReflectionUtil {
         }
     }
 
+    private static class MapInitializer extends RandomInitializer {
+        @Override
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return Map.class.isAssignableFrom(type);
+        }
+
+        @Override
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
+            Map resultMap = instantiateMap(type);
+
+            Type keyType = getKeyValueType(genericType, 0);
+            Type valueType = getKeyValueType(genericType, 1);
+
+            for(int i = 0; i < MAX_ITEMS_TO_CREATE_IN_COLLECTIONS; i++) {
+                Object key = getInitializers().generateValue(keyType, traverser);
+                Object value = getInitializers().generateValue(valueType, traverser);
+                resultMap.put(key, value);
+            }
+
+            return resultMap;
+        }
+
+        private Type getKeyValueType(Type genericType, int index) {
+            if (genericType instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) genericType;
+
+                return parameterizedType.getActualTypeArguments()[index];
+            } else {
+                throw new RuntimeException("Unknown type of instances to be created.");
+            }
+        }
+
+        private Map instantiateMap(Class<?> type) {
+            int modifiers = type.getModifiers();
+            boolean interfaceOrAbstractClass = type.isInterface() || Modifier.isAbstract(modifiers);
+            if (interfaceOrAbstractClass) {
+                //TODO MM: allow to specify which maps are created.
+                //noinspection unchecked
+                HashMap hashMap = new HashMap();
+                return hashMap;
+            } else {
+                try {
+                    Map result = (Map) type.newInstance();
+                    //noinspection uncheckbed
+                    return result;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
     private static class CollectionOrIterableInitialier extends RandomInitializer {
         @Override
         public boolean canProvideValueFor(Class<?> type, Type genericType) {
@@ -148,7 +203,7 @@ public class InstanceReflectionUtil {
         }
     }
 
-    private static class ArraInitializer extends ArrayLikeInitializerParent {
+    private static class ArraInitializer extends ArrayLikeInitializerParent {   //TODO MM: rename
 
         @Override
         public boolean canProvideValueFor(Class<?> type, Type genericType) {
@@ -343,6 +398,7 @@ public class InstanceReflectionUtil {
                     new ListInitializer(),
                     new SetInitializer(),
                     new ArraInitializer(),
+                    new MapInitializer(),
                     new CollectionOrIterableInitialier(),
 
                     new BooleanInitializer(),
@@ -375,6 +431,12 @@ public class InstanceReflectionUtil {
 
             Initializer initializer = suitableInitializers.get(0);
             return initializer;
+        }
+
+        public Object generateValue(Type keyType, Traverser traverser) {
+            Class<?> classType = GenericType.getClassType(keyType);
+            return getSoleInitializer(classType, keyType)
+                .getValue(classType, keyType, traverser);
         }
     }
 
