@@ -54,7 +54,7 @@ public class InstanceReflectionUtil {
                 try {
                     Initializer initializer = this.getInitializers().getSoleInitializer(GenericType.getClassType(typeOfListElements), typeOfListElements);
 
-                    Object newInstance = initializer.generateRandomValue(GenericType.getClassType(typeOfListElements), typeOfListElements, traverser);//TODO MM: rename — remove word random.
+                    Object newInstance = initializer.getValue(GenericType.getClassType(typeOfListElements), typeOfListElements, traverser);
 
                     //noinspection unchecked
                     result.add(newInstance);
@@ -67,7 +67,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             List listItems = createItemsForCollection(typeOfListElements(genericType), traverser);
             return instantiateCollection(type, listItems);
         }
@@ -130,7 +130,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             Type typeOfArrayItems = GenericType.getTypeOfArrayElements(genericType);
 
             List listItems = createItemsForCollection(typeOfArrayItems, traverser);
@@ -157,7 +157,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             return random.nextInt();
         }
     }
@@ -169,7 +169,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             Object[] values = type.getEnumConstants();
             return values[random.nextInt(values.length)];
         }
@@ -181,7 +181,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             return random.nextBoolean();
         }
     }
@@ -192,7 +192,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             int date = random.nextInt();
             date = date < 0 ? -1 * date : date;
             return new Date(date);
@@ -205,7 +205,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             return UUID.randomUUID();
         }
     }
@@ -216,7 +216,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             return "RandomString: " + Long.toString(random.nextLong());
         }
     }
@@ -250,7 +250,7 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser) {
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             try {
                 Constructor<?> publicNoArgConstructor = type.getConstructor();
                 Object instance = publicNoArgConstructor.newInstance();
@@ -286,7 +286,7 @@ public class InstanceReflectionUtil {
 
     private interface Initializer {
         boolean canProvideValueFor(Class<?> type, Type genericType);
-        Object generateRandomValue(Class<?> type, Type genericType, Traverser traverser);
+        Object getValue(Class<?> type, Type genericType, Traverser traverser);
 
         /** sets reference to all initializers known to system, in order to be able to do composite initializations. Example: when you initializing list, which contains sets of integers. So you need to initialize list, for each item new set, and for each set several integers */
         void setInitializers(Initializers initializers);
@@ -307,7 +307,7 @@ public class InstanceReflectionUtil {
 //            if (node.getValue() == null) {
             Initializer initializer = initializers.getSoleInitializer(node.getType(), node.getGenericType());
 
-            node.setValue(initializer.generateRandomValue(node.getType(), node.getGenericType(), node.getTraverser()));
+            node.setValue(initializer.getValue(node.getType(), node.getGenericType(), node.getTraverser()));
 //            }
         }
     }
