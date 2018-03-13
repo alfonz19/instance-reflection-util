@@ -27,23 +27,6 @@ public class InstanceReflectionUtil {
 
     //<editor-fold desc="SpecificInitializers">
     private static abstract class ArrayLikeInitializerParent extends RandomInitializer {
-        private Type typeOfListElements(Type genericType) {
-            if (genericType instanceof Class) {
-                throw new RuntimeException("Unknown type of instances to be created.");
-            } else if (genericType instanceof ParameterizedType) {
-                //TODO MM: allow to specify subclasses to be instantiated as well.
-
-                ParameterizedType parameterizedType = (ParameterizedType) genericType;
-
-                //lists have just one type parameter. //TODO MM: reuse for maps etc.
-                return parameterizedType.getActualTypeArguments()[0];
-            } else if (genericType instanceof GenericArrayType) {
-                GenericArrayType genericArrayType = (GenericArrayType) genericType;
-                return genericArrayType.getGenericComponentType();
-            } else {
-                throw new RuntimeException("Unknown type of instances to be created.");
-            }
-        }
 
         protected List createItemsForCollection(Type typeOfListElements, Traverser traverser) {
             //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
@@ -68,7 +51,10 @@ public class InstanceReflectionUtil {
 
         @Override
         public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
-            List listItems = createItemsForCollection(typeOfListElements(genericType), traverser);
+            //TODO MM: allow to specify subclasses to be instantiated as well.
+            Type typeOfListElements = GenericType.typeOfListElements(genericType);
+
+            List listItems = createItemsForCollection(typeOfListElements, traverser);
             return instantiateCollection(type, listItems);
         }
 
@@ -505,6 +491,23 @@ public class InstanceReflectionUtil {
                 return genericArrayType.getGenericComponentType();
             } else {
                 throw new UnsupportedOperationException("Not implemented yet");
+            }
+        }
+
+        public static Type typeOfListElements(Type genericType) {
+            if (genericType instanceof Class) {
+                throw new RuntimeException("Unknown type of instances to be created.");
+            } else if (genericType instanceof ParameterizedType) {
+
+                ParameterizedType parameterizedType = (ParameterizedType) genericType;
+
+                //lists have just one type parameter. //TODO MM: reuse for maps etc.
+                return parameterizedType.getActualTypeArguments()[0];
+            } else if (genericType instanceof GenericArrayType) {
+                GenericArrayType genericArrayType = (GenericArrayType) genericType;
+                return genericArrayType.getGenericComponentType();
+            } else {
+                throw new RuntimeException("Unknown type of instances to be created.");
             }
         }
     }
