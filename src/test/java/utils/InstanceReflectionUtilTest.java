@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings({"Duplicates", "WeakerAccess", "unused"})
 public class InstanceReflectionUtilTest {
@@ -411,6 +412,13 @@ public class InstanceReflectionUtilTest {
         }
     }
 
+    @Test
+    public void testClassWithRidiculouslyComplexMap()  {
+        ClassWithRidiculouslyComplexMap process = traverser.process(new ClassWithRidiculouslyComplexMap());
+        Map<? extends Pair<Set<String>, List<Integer>>, Map<Integer, Pair<List<String>, ? extends B>>> map = process.map;
+        assertThat(map.isEmpty(), is(false));
+        fail("test not implemented");
+    }
     //--------------------------------------------------
 
     public static class A {
@@ -459,6 +467,10 @@ public class InstanceReflectionUtilTest {
 
     public static class ClassWithPairHavingTypeDefinedInClass<TT, KK> {
         public Pair<TT, KK> pair;
+    }
+
+    public static class ClassWithRidiculouslyComplexMap {
+        public Map<? extends Pair<Set<String>, List<Integer>>, Map<Integer, Pair<List<String>, ? extends B>>> map;
     }
 
     public static class Pair<T, K> {

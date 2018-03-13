@@ -35,7 +35,7 @@ public class GenericTypeUtil {
             //solves only ? extends ...
             WildcardType wildcardType = (WildcardType) genericType;
             Type[] upperBounds = wildcardType.getUpperBounds();
-            return (Class) upperBounds[0];  //TODO MM: recursion?
+            return getClassType(upperBounds[0]);
         } else {
             throw new UnsupportedOperationException("Not implemented yet");
         }
