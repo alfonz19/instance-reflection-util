@@ -7,16 +7,19 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.sun.webkit.graphics.WCTransform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -484,10 +487,16 @@ public class InstanceReflectionUtil {
                     //this is far from ideal, thus one should avoid using this method if possible for finding out
                     //class type of array from generic type.
                     log.warn("Used inefficient query to get array class type.");
-                    return Array.newInstance((Class)((ParameterizedType)genericArrayType.getGenericComponentType()).getRawType(), 0).getClass();
+                    return Array.newInstance((Class) ((ParameterizedType) genericArrayType.getGenericComponentType()).getRawType(),
+                            0).getClass();
                 } else {
                     throw new UnsupportedOperationException("Not implemented yet");
                 }
+            } else if (genericType instanceof WildcardType) {
+                //solves only ? extends ...
+                WildcardType wildcardType = (WildcardType) genericType;
+                Type[] upperBounds = wildcardType.getUpperBounds();
+                return (Class) upperBounds[0];  //TODO MM: recursion?
             } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }

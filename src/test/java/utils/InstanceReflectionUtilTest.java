@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -95,6 +96,23 @@ public class InstanceReflectionUtilTest {
 
         Class<?> aClass = actual.set.getClass();
         assertEquals(aClass, HashSet.class);
+    }
+
+    @Test
+    public void testInitializingClassWithExtendsList()  {
+        ClassWithExtendsList instance = new ClassWithExtendsList();
+
+        ClassWithExtendsList actual = traverser.process(instance);
+
+//        Class<?> aClass = actual.bList.getClass();
+        assertThat(actual.bList, CoreMatchers.isA(List.class));
+//        assertEquals(aClass, List.class);
+        assertThat(actual.bList.isEmpty(), is(false));
+
+        for (A a : actual.bList) {
+            assertThat(a, notNullValue());
+        }
+
     }
 
     @Test
@@ -225,7 +243,7 @@ public class InstanceReflectionUtilTest {
         public HashSet<B> set;
     }
 
-    public static class ClassWithExtendsList {//TODO MM: implement
+    public static class ClassWithExtendsList {
         public LinkedList<? extends A> bList;
     }
 
