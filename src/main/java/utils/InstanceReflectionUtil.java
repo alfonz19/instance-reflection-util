@@ -26,7 +26,7 @@ public class InstanceReflectionUtil {
     private static final Logger log = LogManager.getLogger(InstanceReflectionUtil.class);
 
     //<editor-fold desc="SpecificInitializers">
-    private static abstract class RandomCollectionInitializerParent extends RandomInitializer {//TODO MM: rename to Array-like collection
+    private static abstract class ArrayLikeInitializerParent extends RandomInitializer {
         private Type typeOfListElements(Type genericType) {
             if (genericType instanceof Class) {
                 throw new RuntimeException("Unknown type of instances to be created.");
@@ -92,7 +92,7 @@ public class InstanceReflectionUtil {
         protected abstract Object instantiateCollectionForInterface(Class<?> classType, List itemsForList);
     }
 
-    private static class ListInitializer extends RandomCollectionInitializerParent {    //TODO MM: make superclass to allow extend this to set, array, etc.
+    private static class ListInitializer extends ArrayLikeInitializerParent {    //TODO MM: make superclass to allow extend this to set, array, etc.
 
         @Override
         public boolean canProvideValueFor(Class<?> type, Type genericType) {
@@ -107,7 +107,7 @@ public class InstanceReflectionUtil {
         }
     }
 
-    private static class SetInitializer extends RandomCollectionInitializerParent {
+    private static class SetInitializer extends ArrayLikeInitializerParent {
 
         @Override
         public boolean canProvideValueFor(Class<?> type, Type genericType) {
@@ -122,7 +122,7 @@ public class InstanceReflectionUtil {
         }
     }
 
-    private static class ArraInitializer extends RandomCollectionInitializerParent {
+    private static class ArraInitializer extends ArrayLikeInitializerParent {
 
         @Override
         public boolean canProvideValueFor(Class<?> type, Type genericType) {
