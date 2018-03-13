@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.junit.rules.ExpectedException;
 import utils.InstanceReflectionUtil.FieldTraverser;
 import utils.InstanceReflectionUtil.InitializingProcessor;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
@@ -46,26 +48,54 @@ public class InstanceReflectionUtilTest {
     }
 
     @Test
-    public void testInitializingLists()  {
-        C instance = new C();
-        C processed = traverser.process(instance);
+    public void testClassWithList()  {
+        assertThat(traverser.process(new ClassWithList()).list, notNullValue());
 
-        assertThat(processed.bList, notNullValue());
-        assertThat(processed.bList.isEmpty(), is(false));
-
-        for (B b : processed.bList) {
+        //iterable does not know about size/emptiness.
+        int itemCount = 0;
+        for (B b : traverser.process(new ClassWithList()).list) {
+            itemCount++;
             assertThat(b.i, notNullValue());
             assertThat(b.ii, notNullValue());
         }
+        assertThat(itemCount, is(not(0)));
+    }
+
+    @Test
+    public void testClassWithCollection()  {
+        assertThat(traverser.process(new ClassWithCollection()).collection, notNullValue());
+
+        //iterable does not know about size/emptiness.
+        int itemCount = 0;
+        for (B b : traverser.process(new ClassWithCollection()).collection) {
+            itemCount++;
+            assertThat(b.i, notNullValue());
+            assertThat(b.ii, notNullValue());
+        }
+        assertThat(itemCount, is(not(0)));
+    }
+
+    @Test
+    public void testClassWithIterable()  {
+        assertThat(traverser.process(new ClassWithIterable()).iterable, notNullValue());
+
+        //iterable does not know about size/emptiness.
+        int itemCount = 0;
+        for (B b : traverser.process(new ClassWithIterable()).iterable) {
+            itemCount++;
+            assertThat(b.i, notNullValue());
+            assertThat(b.ii, notNullValue());
+        }
+        assertThat(itemCount, is(not(0)));
     }
 
     @Test
     public void testInitializingListsDeeply()  {
-        C instance = new C();
-        C processed = traverser.process(instance);
+        ClassWithList instance = new ClassWithList();
+        ClassWithList processed = traverser.process(instance);
 
-        assertThat(processed.bList, notNullValue());
-        assertThat(processed.bList.isEmpty(), is(false));
+        assertThat(processed.list, notNullValue());
+        assertThat(processed.list.isEmpty(), is(false));
     }
 
     @Test
@@ -143,7 +173,6 @@ public class InstanceReflectionUtilTest {
         }
     }
 
-//    @Ignore
     @Test
     public void testInitializingClassWithListsOfArrays()  {
         ClassWithListsOfArray instance = new ClassWithListsOfArray();
@@ -165,7 +194,6 @@ public class InstanceReflectionUtilTest {
 
     }
 
-//    @Ignore
     @Test
     public void testInitializingClassWithArraysOfLists()  {
         ClassWithArrayOfLists instance = new ClassWithArrayOfLists();
@@ -227,8 +255,16 @@ public class InstanceReflectionUtilTest {
 
     }
 
-    public static class C {
-        public List<B> bList;
+    public static class ClassWithList {
+        public List<B> list;
+    }
+
+    public static class ClassWithCollection {
+        public Collection<B> collection;
+    }
+
+    public static class ClassWithIterable {
+        public Iterable<B> iterable;
     }
 
     public static class ClassWithUntypedList {

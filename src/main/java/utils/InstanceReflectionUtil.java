@@ -10,16 +10,16 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.sun.webkit.graphics.WCTransform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -97,6 +97,21 @@ public class InstanceReflectionUtil {
         @Override
         protected Type getTypeOfElements(Type genericType) {
             return GenericType.typeOfListSetElements(genericType);
+        }
+    }
+
+    private static class CollectionOrIterableInitialier extends RandomInitializer {
+        @Override
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            return Collection.class.isAssignableFrom(type) || Iterable.class.isAssignableFrom(type);
+        }
+
+        @Override
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
+            List<Class<? extends Collection>> delegateTo = Arrays.asList(List.class, Set.class);
+            Class<? extends Collection> delegateClass = delegateTo.get(random.nextInt(delegateTo.size()));
+            return getInitializers().getSoleInitializer(delegateClass, genericType)
+                    .getValue(delegateClass, genericType, traverser);
         }
     }
 
@@ -328,7 +343,8 @@ public class InstanceReflectionUtil {
                     new ListInitializer(),
                     new SetInitializer(),
                     new ArraInitializer(),
-                    
+                    new CollectionOrIterableInitialier(),
+
                     new BooleanInitializer(),
                     new JavaUtilDateInitializer(),
                     new UuidInitializer(),
