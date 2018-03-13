@@ -52,30 +52,17 @@ public class InstanceReflectionUtil {
         @Override
         public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
             //TODO MM: allow to specify subclasses to be instantiated as well.
-            Type typeOfListElements = GenericType.typeOfListElements(genericType);
+            Type typeOfElements = getTypeOfElements(genericType);
 
-            List listItems = createItemsForCollection(typeOfListElements, traverser);
-            return instantiateCollection(type, listItems);
+            List listItems = createItemsForCollection(typeOfElements, traverser);
+            return instantiateCollection(type, typeOfElements, listItems);
         }
 
-        private Object instantiateCollection(Class<?> type, List itemsForList) {
-            int modifiers = type.getModifiers();
-            boolean cannotInstantiateSpecificClass = type.isInterface() || Modifier.isAbstract(modifiers);
-            if (cannotInstantiateSpecificClass) {
-                return instantiateCollectionForInterface(type, itemsForList);
-            } else {
-                try {
-                    List result = (List) type.newInstance();
-                    //noinspection unchecked
-                    result.addAll(itemsForList);
-                    return result;
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+        protected abstract Type getTypeOfElements(Type genericType);
 
-        protected abstract Object instantiateCollectionForInterface(Class<?> classType, List itemsForList);
+        protected abstract Object instantiateCollection(Class<?> type,
+                                                        Type typeOfElements,
+                                                        List items);
     }
 
     private static class ListInitializer extends ArrayLikeInitializerParent {
@@ -85,10 +72,28 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) {
-            //TODO MM: allow to specify which lists are created.
-            //noinspection unchecked
-            return new ArrayList(itemsForList);
+        protected Object instantiateCollection(Class<?> type, Type typeOfElements, List items) {
+            int modifiers = type.getModifiers();
+            boolean interfaceOrAbstractClass = type.isInterface() || Modifier.isAbstract(modifiers);
+            if (interfaceOrAbstractClass) {
+                //TODO MM: allow to specify which lists are created.
+                //noinspection unchecked
+                return new ArrayList(items);
+            } else {
+                try {
+                    List result = (List) type.newInstance();
+                    //noinspection unchecked
+                    result.addAll(items);
+                    return result;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        @Override
+        protected Type getTypeOfElements(Type genericType) {
+            return GenericType.typeOfListSetElements(genericType);
         }
     }
 
@@ -100,10 +105,28 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) {
-            //TODO MM: allow to specify which set are created.
-            //noinspection unchecked
-            return new HashSet(itemsForList);
+        protected Object instantiateCollection(Class<?> type, Type typeOfElements, List items) {
+            int modifiers = type.getModifiers();
+            boolean interfaceOrAbstractClass = type.isInterface() || Modifier.isAbstract(modifiers);
+            if (interfaceOrAbstractClass) {
+                //TODO MM: allow to specify which set are created.
+                //noinspection unchecked
+                return new HashSet(items);
+            } else {
+                try {
+                    Set result = (Set) type.newInstance();
+                    //noinspection unchecked
+                    result.addAll(items);
+                    return result;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        @Override
+        protected Type getTypeOfElements(Type genericType) {
+            return GenericType.typeOfListSetElements(genericType);
         }
     }
 
@@ -115,22 +138,19 @@ public class InstanceReflectionUtil {
         }
 
         @Override
-        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
-            Type typeOfArrayItems = GenericType.getTypeOfArrayElements(genericType);
+        protected Object instantiateCollection(Class<?> classType, Type typeOfElements, List items) {
+            Class<?> componentType = GenericType.getClassType(typeOfElements);
 
-            List listItems = createItemsForCollection(typeOfArrayItems, traverser);
-
-            Object newArray = Array.newInstance(GenericType.getClassType(typeOfArrayItems), listItems.size());
-            for(int i = 0; i < listItems.size(); i++) {
-                Array.set(newArray, i, listItems.get(i));
+            Object newArray = Array.newInstance(componentType, items.size());
+            for(int i = 0; i < items.size(); i++) {
+                Array.set(newArray, i, items.get(i));
             }
-
             return newArray;
         }
 
         @Override
-        protected Object instantiateCollectionForInterface(Class<?> classType, List itemsForList) { //TODO MM: fix invalid hierarchy.
-            throw new UnsupportedOperationException("Should not be reachable");
+        protected Type getTypeOfElements(Type genericType) {
+            return GenericType.getTypeOfArrayElements(genericType);
         }
     }
 
@@ -494,7 +514,7 @@ public class InstanceReflectionUtil {
             }
         }
 
-        public static Type typeOfListElements(Type genericType) {
+        public static Type typeOfListSetElements(Type genericType) {
             if (genericType instanceof Class) {
                 throw new RuntimeException("Unknown type of instances to be created.");
             } else if (genericType instanceof ParameterizedType) {

@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -84,6 +85,16 @@ public class InstanceReflectionUtilTest {
 
         Class<?> aClass = actual.bList.getClass();
         assertEquals(aClass, LinkedList.class);
+    }
+
+    @Test
+    public void testInitializingClassWithSpecificSet()  {
+        ClassWithSpecificSet instance = new ClassWithSpecificSet();
+
+        ClassWithSpecificSet actual = traverser.process(instance);
+
+        Class<?> aClass = actual.set.getClass();
+        assertEquals(aClass, HashSet.class);
     }
 
     @Test
@@ -208,6 +219,10 @@ public class InstanceReflectionUtilTest {
 
     public static class ClassWithSpecificList {
         public LinkedList<B> bList;
+    }
+
+    public static class ClassWithSpecificSet {
+        public HashSet<B> set;
     }
 
     public static class ClassWithExtendsList {//TODO MM: implement
