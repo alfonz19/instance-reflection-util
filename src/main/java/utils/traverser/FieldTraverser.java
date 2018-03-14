@@ -2,6 +2,7 @@ package utils.traverser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 
 public class FieldTraverser implements ClassTreeTraverser {
     private final TraversingProcessor traversingProcessor;
@@ -50,6 +51,10 @@ public class FieldTraverser implements ClassTreeTraverser {
         Field[] fields = instanceClass.getDeclaredFields();
 
         for (Field field : fields) {
+            if (field.getName().equals("this$0")) {
+                continue;
+            }
+
             field.setAccessible(true);
             ModifiableFieldTraverserNode modifiableNode = new ModifiableFieldTraverserNode(field, instance);
 
@@ -62,6 +67,9 @@ public class FieldTraverser implements ClassTreeTraverser {
         private final Object nodeValue;
         private final Type genericType;
         private final Class<?> type;
+        private final TypeVariable<? extends Class<?>>[] typeParametersOfDeclaringClass;
+        private final Class<?> declaringClassOfNode;
+        private final Class<?> instanceClass;
 
         public FieldTraverserNode(ModifiableFieldTraverserNode node) {
             Field field = node.getField();
@@ -71,6 +79,9 @@ public class FieldTraverser implements ClassTreeTraverser {
                 nodeValue = field.get(instance);
                 genericType = field.getGenericType();
                 type = field.getType();
+                declaringClassOfNode = field.getDeclaringClass();
+                instanceClass = instance.getClass();
+                typeParametersOfDeclaringClass = declaringClassOfNode.getTypeParameters();
             } catch (Exception e) {
                 throw new RuntimeException();
             }
@@ -89,6 +100,21 @@ public class FieldTraverser implements ClassTreeTraverser {
         @Override
         public Class<?> getType() {
             return type;
+        }
+
+        @Override
+        public TypeVariable<? extends Class<?>>[] getDeclaringClassTypeParameters() {
+            return typeParametersOfDeclaringClass;
+        }
+
+        @Override
+        public Class<?> getDeclaringClassOfNode() {
+            return declaringClassOfNode;
+        }
+
+        @Override
+        public Class<?> getInstanceClass() {
+            return instanceClass;
         }
     }
 
@@ -140,6 +166,21 @@ public class FieldTraverser implements ClassTreeTraverser {
 
         public FieldTraverserNode getTraverserNode() {
             return traverserNode;
+        }
+
+        @Override
+        public TypeVariable<? extends Class<?>>[] getDeclaringClassTypeParameters() {
+            return traverserNode.getDeclaringClassTypeParameters();
+        }
+
+        @Override
+        public Class<?> getDeclaringClassOfNode() {
+            return traverserNode.getDeclaringClassOfNode();
+        }
+
+        @Override
+        public Class<?> getInstanceClass() {
+            return traverserNode.getInstanceClass();
         }
     }
 }

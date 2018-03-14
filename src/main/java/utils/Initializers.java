@@ -17,6 +17,7 @@ import utils.initializers.ListInitializer;
 import utils.initializers.MapInitializer;
 import utils.initializers.SetInitializer;
 import utils.initializers.StringInitializer;
+import utils.initializers.TypeVariableInitializer;
 import utils.initializers.UuidInitializer;
 import utils.traverser.ClassTreeTraverserContext;
 
@@ -38,6 +39,7 @@ public class Initializers {
                 new StringInitializer(),
                 new EnumInitializer(),
 
+                new TypeVariableInitializer(),
                 new DefaultConstructorInitializer());
 
         result.forEach(e->e.setInitializers(this));

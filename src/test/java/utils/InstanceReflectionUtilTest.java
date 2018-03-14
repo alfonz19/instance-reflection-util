@@ -291,6 +291,53 @@ public class InstanceReflectionUtilTest {
 
         }
     }
+
+    @Test
+    public void testClassWithPair()  {
+        ClassWithPairHavingTypeDefinedInField process = traverser.process(new ClassWithPairHavingTypeDefinedInField());
+        Pair<String, String> pair = process.pair;
+        assertPair(pair, String.class, String.class);
+    }
+
+    private <T,K> void assertPair(Pair<T, K> pair, Class<?> firstClass, Class<?> secondClass) {
+        assertThat(pair, notNullValue());
+        assertThat(pair.first, notNullValue());
+        assertTrue(pair.first.getClass().equals(firstClass));
+        assertThat(pair.second, notNullValue());
+        assertTrue(pair.second.getClass().equals(secondClass));
+    }
+
+    @Test
+    public void testClassWithPairHavingTypeDefinedInClass()  {
+        ClassWithPairHavingTypeDefinedInClass<String, Integer> instance = new ClassWithPairHavingTypeDefinedInClass<String, Integer>() {
+        };
+        ClassWithPairHavingTypeDefinedInClass<String, Integer> process = traverser.process(instance);
+        Pair<String, Integer> pair = process.pair;
+        assertPair(pair, String.class, Integer.class);
+    }
+
+    //@Ignore("this is impossible, we just need to know how we handle it.")
+    @Test
+    public void testClassWithPairHavingTypeDefinedInClass_impossible()  {
+        ClassWithPairHavingTypeDefinedInClass<String, Integer> instance = new ClassWithPairHavingTypeDefinedInClass<>();
+        ClassWithPairHavingTypeDefinedInClass<String, Integer> process = traverser.process(instance);
+        Pair<String, Integer> pair = process.pair;
+        assertPair(pair, String.class, Integer.class);
+    }
+
+    @Test
+    public void testClassWithPairsOfPairs()  {
+        ClassWithPairsOfPairs<String,Integer> instance = new ClassWithPairsOfPairs<String,Integer>() {};
+        ClassWithPairsOfPairs<String,Integer> process = traverser.process(instance);
+
+
+        Pair<ClassWithPairHavingTypeDefinedInClass<String, Integer>, ClassWithPairHavingTypeDefinedInClass<Integer, String>> pair = process.pair;
+
+        assertPair(pair, ClassWithPairHavingTypeDefinedInClass.class, ClassWithPairHavingTypeDefinedInClass.class);
+        assertPair(pair.first.pair, String.class, Integer.class);
+        assertPair(pair.second.pair, Integer.class, String.class);
+    }
+
     //--------------------------------------------------
 
     public static class A {
@@ -316,6 +363,22 @@ public class InstanceReflectionUtilTest {
 
     public static class ClassWithMap {
         public Map<String, String> map;
+    }
+
+
+    public static class ClassWithPairHavingTypeDefinedInField {
+        public Pair<String, String> pair;
+    }
+
+    public static class ClassWithPairsOfPairs<X,Y> extends ClassWithPairHavingTypeDefinedInClass<ClassWithPairHavingTypeDefinedInClass<X,Y>, ClassWithPairHavingTypeDefinedInClass<Y,X>> {}
+
+    public static class ClassWithPairHavingTypeDefinedInClass<TT, KK> {
+        public Pair<TT, KK> pair;
+    }
+
+    public static class Pair<T, K> {
+        T first;
+        K second;
     }
 
     public static class ClassWithMapWithArrays {
