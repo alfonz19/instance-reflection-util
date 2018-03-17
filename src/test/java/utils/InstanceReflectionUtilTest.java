@@ -12,7 +12,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import utils.InstanceReflectionUtil.FieldTraverser;
+import utils.traverser.FieldTraverser;
 import utils.InstanceReflectionUtil.InitializingProcessor;
 
 import static org.hamcrest.CoreMatchers.is;

@@ -3,7 +3,7 @@ package utils.initializers;
 import java.lang.reflect.Type;
 import java.util.UUID;
 
-import utils.InstanceReflectionUtil;
+import utils.traverser.ClassTreeTraverser;
 
 public class UuidInitializer extends SimpleInitializer {
     public UuidInitializer() {
@@ -11,7 +11,7 @@ public class UuidInitializer extends SimpleInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, InstanceReflectionUtil.Traverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
         return UUID.randomUUID();
     }
 }

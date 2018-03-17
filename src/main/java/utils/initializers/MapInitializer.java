@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import utils.InstanceReflectionUtil;
-import utils.initializers.RandomInitializer;
+import utils.traverser.ClassTreeTraverser;
 
 public class MapInitializer extends RandomInitializer {
     @Override
@@ -16,7 +16,7 @@ public class MapInitializer extends RandomInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, InstanceReflectionUtil.Traverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
         Map resultMap = instantiateMap(type);
 
         Type keyType = getKeyValueType(genericType, 0);

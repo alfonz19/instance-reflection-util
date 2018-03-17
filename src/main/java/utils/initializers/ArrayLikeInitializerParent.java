@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import utils.InstanceReflectionUtil;
+import utils.traverser.ClassTreeTraverser;
 
 public abstract class ArrayLikeInitializerParent extends RandomInitializer {
 
-    protected List createItemsForCollection(Type typeOfListElements, InstanceReflectionUtil.Traverser traverser) {
+    protected List createItemsForCollection(Type typeOfListElements, ClassTreeTraverser traverser) {
         //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
         int itemCount = 1 + random.nextInt(InstanceReflectionUtil.MAX_ITEMS_TO_CREATE_IN_COLLECTIONS);
 
@@ -30,7 +31,7 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, InstanceReflectionUtil.Traverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
         //TODO MM: allow to specify subclasses to be instantiated as well.
         Type typeOfElements = getTypeOfElements(genericType);
 

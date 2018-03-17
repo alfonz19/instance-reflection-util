@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import utils.InstanceReflectionUtil;
+import utils.traverser.ClassTreeTraverser;
 
 public class CollectionOrIterableInitializer extends RandomInitializer {
     @Override
@@ -15,7 +15,7 @@ public class CollectionOrIterableInitializer extends RandomInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, InstanceReflectionUtil.Traverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
         List<Class<? extends Collection>> delegateTo = Arrays.asList(List.class, Set.class);
         Class<? extends Collection> delegateClass = delegateTo.get(random.nextInt(delegateTo.size()));
         return getInitializers().getSoleInitializer(delegateClass, genericType)
