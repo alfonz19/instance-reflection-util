@@ -9,9 +9,11 @@ import utils.traverser.ClassTreeTraverser;
 
 public abstract class ArrayLikeInitializerParent extends RandomInitializer {
 
-    protected List createItemsForCollection(Type typeOfListElements, ClassTreeTraverser traverser) {
+    protected static final int MAX_ITEMS_TO_CREATE_IN_COLLECTIONS = 5;
+
+    private List createItemsForCollection(Type typeOfListElements, ClassTreeTraverser traverser) {
         //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
-        int itemCount = 1 + random.nextInt(InstanceReflectionUtil.MAX_ITEMS_TO_CREATE_IN_COLLECTIONS);
+        int itemCount = 1 + random.nextInt(MAX_ITEMS_TO_CREATE_IN_COLLECTIONS);
 
         List result = new ArrayList(itemCount);
         for (int i = 0; i < itemCount; i++) {

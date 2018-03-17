@@ -16,7 +16,6 @@ import utils.traverser.TraverserNode;
 public class InstanceReflectionUtil {
 
     private static final Logger log = LogManager.getLogger(InstanceReflectionUtil.class);
-    public static final int MAX_ITEMS_TO_CREATE_IN_COLLECTIONS = 5;
 
     public interface Processor {
         void process(TraverserNode node);

@@ -6,7 +6,6 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import utils.InstanceReflectionUtil;
 import utils.traverser.ClassTreeTraverser;
 
 public class MapInitializer extends RandomInitializer {
@@ -22,7 +21,7 @@ public class MapInitializer extends RandomInitializer {
         Type keyType = getKeyValueType(genericType, 0);
         Type valueType = getKeyValueType(genericType, 1);
 
-        for(int i = 0; i < InstanceReflectionUtil.MAX_ITEMS_TO_CREATE_IN_COLLECTIONS; i++) {
+        for(int i = 0; i < ArrayLikeInitializerParent.MAX_ITEMS_TO_CREATE_IN_COLLECTIONS; i++) {
             Object key = getInitializers().generateValue(keyType, traverser);
             Object value = getInitializers().generateValue(valueType, traverser);
             resultMap.put(key, value);
