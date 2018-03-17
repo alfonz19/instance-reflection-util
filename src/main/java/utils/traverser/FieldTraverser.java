@@ -4,10 +4,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 public class FieldTraverser implements ClassTreeTraverser {
-    private final Processor processor;
+    private final TraversingProcessor traversingProcessor;
 
-    public FieldTraverser(Processor processor) {
-        this.processor = processor;
+    public FieldTraverser(TraversingProcessor traversingProcessor) {
+        this.traversingProcessor = traversingProcessor;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class FieldTraverser implements ClassTreeTraverser {
             field.setAccessible(true);
             node.setContext(field, instance, this);
 
-            processor.process(node);
+            traversingProcessor.process(node);
         }
     }
 

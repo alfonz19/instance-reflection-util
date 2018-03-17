@@ -13,7 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import utils.traverser.FieldTraverser;
-import utils.traverser.InitializingProcessor;
+import utils.traverser.InitializingTraversingProcessor;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -29,7 +29,7 @@ public class InstanceReflectionUtilTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
-    private FieldTraverser traverser = new FieldTraverser(new InitializingProcessor());
+    private FieldTraverser traverser = new FieldTraverser(new InitializingTraversingProcessor());
 
     @Test
     public void testBasicFieldsOverHierarchy()  {

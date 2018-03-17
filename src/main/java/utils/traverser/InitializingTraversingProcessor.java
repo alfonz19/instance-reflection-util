@@ -3,7 +3,7 @@ package utils.traverser;
 import utils.Initializers;
 import utils.initializers.Initializer;
 
-public class InitializingProcessor implements Processor {
+public class InitializingTraversingProcessor implements TraversingProcessor {
     private final Initializers initializers = new Initializers();
 
 

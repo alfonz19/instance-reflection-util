@@ -1,5 +1,5 @@
 package utils.traverser;
 
-public interface Processor {
+public interface TraversingProcessor {
     void process(TraverserNode node);
 }
