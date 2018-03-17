@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import utils.initializers.Initializer;
 import utils.traverser.FieldTraverser;
+import utils.traverser.TraverserNode;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class InstanceReflectionUtil {
@@ -18,7 +19,7 @@ public class InstanceReflectionUtil {
     public static final int MAX_ITEMS_TO_CREATE_IN_COLLECTIONS = 5;
 
     public interface Processor {
-        void process(FieldTraverser.FieldTraverserNode node);
+        void process(TraverserNode node);
     }
 
     public static class InitializingProcessor implements Processor {
@@ -26,7 +27,7 @@ public class InstanceReflectionUtil {
 
 
         @Override
-        public void process(FieldTraverser.FieldTraverserNode node) {
+        public void process(TraverserNode node) {
             //TODO MM: decision whether to set primitive values, or all values or only null values
 //            if (node.getValue() == null) {
             Initializer initializer = initializers.getSoleInitializer(node.getType(), node.getGenericType());
