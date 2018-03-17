@@ -64,7 +64,7 @@ public class Initializers {
     }
 
     public Object generateValue(Type keyType, ClassTreeTraverser traverser) {
-        Class<?> classType = InstanceReflectionUtil.GenericType.getClassType(keyType);
+        Class<?> classType = GenericTypeUtil.getClassType(keyType);
         return getSoleInitializer(classType, keyType)
             .getValue(classType, keyType, traverser);
     }

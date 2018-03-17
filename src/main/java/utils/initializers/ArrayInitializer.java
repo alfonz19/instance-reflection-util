@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import utils.InstanceReflectionUtil;
+import utils.GenericTypeUtil;
 
 public class ArrayInitializer extends ArrayLikeInitializerParent {
 
@@ -15,7 +15,7 @@ public class ArrayInitializer extends ArrayLikeInitializerParent {
 
     @Override
     protected Object instantiateCollection(Class<?> classType, Type typeOfElements, List items) {
-        Class<?> componentType = InstanceReflectionUtil.GenericType.getClassType(typeOfElements);
+        Class<?> componentType = GenericTypeUtil.getClassType(typeOfElements);
 
         Object newArray = Array.newInstance(componentType, items.size());
         for(int i = 0; i < items.size(); i++) {
@@ -26,6 +26,6 @@ public class ArrayInitializer extends ArrayLikeInitializerParent {
 
     @Override
     protected Type getTypeOfElements(Type genericType) {
-        return InstanceReflectionUtil.GenericType.getTypeOfArrayElements(genericType);
+        return GenericTypeUtil.getTypeOfArrayElements(genericType);
     }
 }

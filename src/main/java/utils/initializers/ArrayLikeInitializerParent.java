@@ -4,7 +4,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import utils.InstanceReflectionUtil;
+import utils.GenericTypeUtil;
 import utils.traverser.ClassTreeTraverser;
 
 public abstract class ArrayLikeInitializerParent extends RandomInitializer {
@@ -18,9 +18,9 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
         List result = new ArrayList(itemCount);
         for (int i = 0; i < itemCount; i++) {
             try {
-                Initializer initializer = this.getInitializers().getSoleInitializer(InstanceReflectionUtil.GenericType.getClassType(typeOfListElements), typeOfListElements);
+                Initializer initializer = this.getInitializers().getSoleInitializer(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements);
 
-                Object newInstance = initializer.getValue(InstanceReflectionUtil.GenericType.getClassType(typeOfListElements), typeOfListElements, traverser);
+                Object newInstance = initializer.getValue(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements, traverser);
 
                 //noinspection unchecked
                 result.add(newInstance);

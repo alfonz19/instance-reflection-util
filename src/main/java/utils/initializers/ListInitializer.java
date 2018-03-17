@@ -5,7 +5,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import utils.InstanceReflectionUtil;
+import utils.GenericTypeUtil;
 
 public class ListInitializer extends ArrayLikeInitializerParent {
     @Override
@@ -35,6 +35,6 @@ public class ListInitializer extends ArrayLikeInitializerParent {
 
     @Override
     protected Type getTypeOfElements(Type genericType) {
-        return InstanceReflectionUtil.GenericType.typeOfListSetElements(genericType);
+        return GenericTypeUtil.typeOfListSetElements(genericType);
     }
 }

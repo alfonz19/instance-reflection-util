@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import utils.InstanceReflectionUtil;
+import utils.GenericTypeUtil;
 
 public class SetInitializer extends ArrayLikeInitializerParent {
 
@@ -37,6 +37,6 @@ public class SetInitializer extends ArrayLikeInitializerParent {
 
     @Override
     protected Type getTypeOfElements(Type genericType) {
-        return InstanceReflectionUtil.GenericType.typeOfListSetElements(genericType);
+        return GenericTypeUtil.typeOfListSetElements(genericType);
     }
 }
