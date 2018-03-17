@@ -227,6 +227,29 @@ public class InstanceReflectionUtil {
         }
     }
 
+    private static class DefaultConstructorInitializer extends InitializerParent {
+
+        @Override
+        public boolean canProvideValueFor(Class<?> type, Type genericType) {
+            try {
+                type.getConstructor();
+                return true;
+            } catch(Exception e) {
+                return false;
+            }
+        }
+
+        @Override
+        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
+            try {
+                Constructor<?> publicNoArgConstructor = type.getConstructor();
+                Object instance = publicNoArgConstructor.newInstance();
+                return traverser.process(instance);
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     //<editor-fold desc="TrivialInitializers">
     private static class IntInitializer extends SimpleInitializer {
@@ -312,30 +335,6 @@ public class InstanceReflectionUtil {
 
         public Initializers getInitializers() {
             return initializers;
-        }
-    }
-
-    private static class DefaultConstructorInitializer extends InitializerParent {
-
-        @Override
-        public boolean canProvideValueFor(Class<?> type, Type genericType) {
-            try {
-                type.getConstructor();
-                return true;
-            } catch(Exception e) {
-                return false;
-            }
-        }
-
-        @Override
-        public Object getValue(Class<?> type, Type genericType, Traverser traverser) {
-            try {
-                Constructor<?> publicNoArgConstructor = type.getConstructor();
-                Object instance = publicNoArgConstructor.newInstance();
-                return traverser.process(instance);
-            } catch(Exception e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
