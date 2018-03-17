@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import utils.initializers.ArrayInitializer;
 import utils.initializers.BooleanInitializer;
-import utils.initializers.CollectionOrIterableInitialier;
+import utils.initializers.CollectionOrIterableInitializer;
 import utils.initializers.DefaultConstructorInitializer;
 import utils.initializers.EnumInitializer;
 import utils.initializers.Initializer;
@@ -28,7 +28,7 @@ public class Initializers {
                 new SetInitializer(),
                 new ArrayInitializer(),
                 new MapInitializer(),
-                new CollectionOrIterableInitialier(),
+                new CollectionOrIterableInitializer(),
 
                 new BooleanInitializer(),
                 new JavaUtilDateInitializer(),

@@ -7,9 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import utils.InstanceReflectionUtil;
-import utils.initializers.RandomInitializer;
 
-public class CollectionOrIterableInitialier extends RandomInitializer {//TODO MM: rename
+public class CollectionOrIterableInitializer extends RandomInitializer {
     @Override
     public boolean canProvideValueFor(Class<?> type, Type genericType) {
         return Collection.class.isAssignableFrom(type) || Iterable.class.isAssignableFrom(type);
