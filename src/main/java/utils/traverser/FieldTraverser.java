@@ -3,12 +3,10 @@ package utils.traverser;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
-import utils.InstanceReflectionUtil;
-
 public class FieldTraverser implements ClassTreeTraverser {
-    private final InstanceReflectionUtil.Processor processor;
+    private final Processor processor;
 
-    public FieldTraverser(InstanceReflectionUtil.Processor processor) {
+    public FieldTraverser(Processor processor) {
         this.processor = processor;
     }
 

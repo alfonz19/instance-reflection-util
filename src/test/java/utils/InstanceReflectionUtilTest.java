@@ -13,7 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import utils.traverser.FieldTraverser;
-import utils.InstanceReflectionUtil.InitializingProcessor;
+import utils.traverser.InitializingProcessor;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
