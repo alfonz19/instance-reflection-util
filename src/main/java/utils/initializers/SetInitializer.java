@@ -1,0 +1,42 @@
+package utils.initializers;
+
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import utils.InstanceReflectionUtil;
+
+public class SetInitializer extends ArrayLikeInitializerParent {
+
+    @Override
+    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+        return Set.class.isAssignableFrom(type);
+    }
+
+    @Override
+    protected Object instantiateCollection(Class<?> type, Type typeOfElements, List items) {
+        int modifiers = type.getModifiers();
+        boolean interfaceOrAbstractClass = type.isInterface() || Modifier.isAbstract(modifiers);
+        if (interfaceOrAbstractClass) {
+            //TODO MM: allow to specify which set are created.
+            //noinspection unchecked
+            return new HashSet(items);
+        } else {
+            try {
+                Set result = (Set) type.newInstance();
+                //noinspection unchecked
+                result.addAll(items);
+                return result;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    protected Type getTypeOfElements(Type genericType) {
+        return InstanceReflectionUtil.GenericType.typeOfListSetElements(genericType);
+    }
+}
