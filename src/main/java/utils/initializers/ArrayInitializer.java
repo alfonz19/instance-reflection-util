@@ -6,7 +6,7 @@ import java.util.List;
 
 import utils.InstanceReflectionUtil;
 
-public class ArraInitializer extends ArrayLikeInitializerParent {   //TODO MM: rename
+public class ArrayInitializer extends ArrayLikeInitializerParent {
 
     @Override
     public boolean canProvideValueFor(Class<?> type, Type genericType) {

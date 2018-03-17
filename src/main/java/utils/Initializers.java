@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import utils.initializers.ArraInitializer;
+import utils.initializers.ArrayInitializer;
 import utils.initializers.BooleanInitializer;
 import utils.initializers.CollectionOrIterableInitialier;
 import utils.initializers.DefaultConstructorInitializer;
@@ -26,7 +26,7 @@ public class Initializers {
         List<Initializer> result = Arrays.asList(
                 new ListInitializer(),
                 new SetInitializer(),
-                new ArraInitializer(),
+                new ArrayInitializer(),
                 new MapInitializer(),
                 new CollectionOrIterableInitialier(),
 
