@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import utils.traverser.ClassTreeTraverser;
+import utils.traverser.ClassTreeTraverserContext;
 
 public class MapInitializer extends RandomInitializer {
     @Override
@@ -15,15 +15,15 @@ public class MapInitializer extends RandomInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
         Map resultMap = instantiateMap(type);
 
         Type keyType = getKeyValueType(genericType, 0);
         Type valueType = getKeyValueType(genericType, 1);
 
         for(int i = 0; i < ArrayLikeInitializerParent.MAX_ITEMS_TO_CREATE_IN_COLLECTIONS; i++) {
-            Object key = getInitializers().generateValue(keyType, traverser);
-            Object value = getInitializers().generateValue(valueType, traverser);
+            Object key = getInitializers().generateValue(keyType, context);
+            Object value = getInitializers().generateValue(valueType, context);
             resultMap.put(key, value);
         }
 

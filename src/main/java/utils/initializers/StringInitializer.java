@@ -2,7 +2,7 @@ package utils.initializers;
 
 import java.lang.reflect.Type;
 
-import utils.traverser.ClassTreeTraverser;
+import utils.traverser.ClassTreeTraverserContext;
 
 public class StringInitializer extends SimpleInitializer {
     public StringInitializer() {
@@ -10,7 +10,7 @@ public class StringInitializer extends SimpleInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
         return "RandomString: " + Long.toString(random.nextLong());
     }
 }

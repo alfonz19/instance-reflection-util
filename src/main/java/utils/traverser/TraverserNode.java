@@ -10,6 +10,4 @@ public interface TraverserNode {
     Type getGenericType();
 
     Class<?> getType();
-
-    ClassTreeTraverser getTraverser();
 }

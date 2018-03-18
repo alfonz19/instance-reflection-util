@@ -18,7 +18,7 @@ import utils.initializers.MapInitializer;
 import utils.initializers.SetInitializer;
 import utils.initializers.StringInitializer;
 import utils.initializers.UuidInitializer;
-import utils.traverser.ClassTreeTraverser;
+import utils.traverser.ClassTreeTraverserContext;
 
 public class Initializers {
     private List<Initializer> initializers = createInitializers();
@@ -63,9 +63,8 @@ public class Initializers {
         return initializer;
     }
 
-    public Object generateValue(Type keyType, ClassTreeTraverser traverser) {
-        Class<?> classType = GenericTypeUtil.getClassType(keyType);
-        return getSoleInitializer(classType, keyType)
-            .getValue(classType, keyType, traverser);
+    public Object generateValue(Type genericType, ClassTreeTraverserContext context) {
+        Class<?> classType = GenericTypeUtil.getClassType(genericType); //TODO MM: check if we can calculate classType from genericType properly!
+        return getSoleInitializer(classType, genericType).getValue(classType, genericType, context);
     }
 }

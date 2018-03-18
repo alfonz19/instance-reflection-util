@@ -2,7 +2,7 @@ package utils.initializers;
 
 import java.lang.reflect.Type;
 
-import utils.traverser.ClassTreeTraverser;
+import utils.traverser.ClassTreeTraverserContext;
 
 public class IntInitializer extends SimpleInitializer {
     public IntInitializer() {
@@ -10,7 +10,7 @@ public class IntInitializer extends SimpleInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
         return random.nextInt();
     }
 }

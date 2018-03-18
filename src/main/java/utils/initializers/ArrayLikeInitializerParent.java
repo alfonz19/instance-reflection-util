@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import utils.GenericTypeUtil;
-import utils.traverser.ClassTreeTraverser;
+import utils.traverser.ClassTreeTraverserContext;
 
 public abstract class ArrayLikeInitializerParent extends RandomInitializer {
 
     protected static final int MAX_ITEMS_TO_CREATE_IN_COLLECTIONS = 5;
 
-    private List createItemsForCollection(Type typeOfListElements, ClassTreeTraverser traverser) {
+    private List createItemsForCollection(Type typeOfListElements, ClassTreeTraverserContext context) {
         //TODO MM: allow specification number of items. Globally 0/1..N, locally. Allow null for whole container? Allow null internal values?
         int itemCount = 1 + random.nextInt(MAX_ITEMS_TO_CREATE_IN_COLLECTIONS);
 
@@ -20,7 +20,7 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
             try {
                 Initializer initializer = this.getInitializers().getSoleInitializer(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements);
 
-                Object newInstance = initializer.getValue(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements, traverser);
+                Object newInstance = initializer.getValue(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements, context);
 
                 //noinspection unchecked
                 result.add(newInstance);
@@ -33,11 +33,11 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverser traverser) {
+    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
         //TODO MM: allow to specify subclasses to be instantiated as well.
         Type typeOfElements = getTypeOfElements(genericType);
 
-        List listItems = createItemsForCollection(typeOfElements, traverser);
+        List listItems = createItemsForCollection(typeOfElements, context);
         return instantiateCollection(type, typeOfElements, listItems);
     }
 

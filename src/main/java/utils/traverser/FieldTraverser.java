@@ -16,7 +16,17 @@ public class FieldTraverser implements ClassTreeTraverser {
     }
 
     @Override
+    public <T> T process(T instance, ClassTreeTraverserContext context) {
+        return process(instance, instance.getClass(), context);
+    }
+
+    @Override
     public <T> T process(T instance, Class<?> startClass) {
+        return process(instance, startClass, new ClassTreeTraverserContext(this));
+    }
+
+    @Override
+    public <T> T process(T instance, Class<?> startClass, ClassTreeTraverserContext context) {
         if (!startClass.isAssignableFrom(instance.getClass())) {
             throw new IllegalArgumentException();
         }
@@ -25,7 +35,7 @@ public class FieldTraverser implements ClassTreeTraverser {
         Class<Object> stopClazz = Object.class;
 
         do {
-            processFieldsInCurrentClass(instance, instanceClass);
+            processFieldsInCurrentClass(instance, instanceClass, context);
             instanceClass = instanceClass.getSuperclass();
         } while (!instanceClass.isAssignableFrom(stopClazz));
 
@@ -34,29 +44,27 @@ public class FieldTraverser implements ClassTreeTraverser {
         return instance;
     }
 
-    private <T> void processFieldsInCurrentClass(T instance, Class<?> instanceClass) {
+    private <T> void processFieldsInCurrentClass(T instance,
+                                                 Class<?> instanceClass,
+                                                 ClassTreeTraverserContext context) {
         Field[] fields = instanceClass.getDeclaredFields();
-        FieldTraverserNode node = new FieldTraverserNode();
 
         for (Field field : fields) {
             field.setAccessible(true);
-            node.setContext(field, instance, this);
+            FieldTraverserNode node = new FieldTraverserNode(field, instance);
 
-            traversingProcessor.process(node);
+            traversingProcessor.process(context.subNode(node));
         }
     }
 
     public static class FieldTraverserNode implements TraverserNode {
-        private Field field;
-        private Object instance;
-        private FieldTraverser fieldTraverser;
+        private final Field field;
+        private final Object instance;
 
-        public <T> void setContext(Field field,
-                                   Object instance,
-                                   FieldTraverser fieldTraverser) {
+
+        public FieldTraverserNode(Field field, Object instance) {
             this.field = field;
             this.instance = instance;
-            this.fieldTraverser = fieldTraverser;
         }
 
         @Override
@@ -85,11 +93,6 @@ public class FieldTraverser implements ClassTreeTraverser {
         @Override
         public Class<?> getType() {
             return field.getType();
-        }
-
-        @Override
-        public FieldTraverser getTraverser() {
-            return fieldTraverser;
         }
     }
 }
