@@ -13,7 +13,10 @@ public class InitializingTraversingProcessor implements TraversingProcessor {
 //            if (node.getValue() == null) {
         Initializer initializer = initializers.getSoleInitializer(node.getType(), node.getGenericType());
 
-        node.setValue(initializer.getValue(node.getType(), node.getGenericType(), node.getTraverser()));
+        Object newValue =
+            initializer.getValue(node.getType(), node.getGenericType(), node.getTraverser());
+
+        node.setValue(newValue);
 //            }
     }
 }

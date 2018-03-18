@@ -19,6 +19,6 @@ public class CollectionOrIterableInitializer extends RandomInitializer {
         List<Class<? extends Collection>> delegateTo = Arrays.asList(List.class, Set.class);
         Class<? extends Collection> delegateClass = delegateTo.get(random.nextInt(delegateTo.size()));
         return getInitializers().getSoleInitializer(delegateClass, genericType)
-                .getValue(delegateClass, genericType, traverser);
+                .getValue(delegateClass, genericType, traverser);//TODO MM: error, you should fix genericType as well.
     }
 }
