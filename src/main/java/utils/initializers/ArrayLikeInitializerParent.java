@@ -18,9 +18,8 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
         List result = new ArrayList(itemCount);
         for (int i = 0; i < itemCount; i++) {
             try {
-                Initializer initializer = this.getInitializers().getSoleInitializer(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements);
-
-                Object newInstance = initializer.getValue(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements, context);
+                Class<?> type = GenericTypeUtil.getClassType(typeOfListElements);
+                Object newInstance = this.getInitializers().generateValue(type, typeOfListElements, context);
 
                 //noinspection unchecked
                 result.add(newInstance);

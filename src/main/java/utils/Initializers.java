@@ -65,6 +65,14 @@ public class Initializers {
 
     public Object generateValue(Type genericType, ClassTreeTraverserContext context) {
         Class<?> classType = GenericTypeUtil.getClassType(genericType); //TODO MM: check if we can calculate classType from genericType properly!
-        return getSoleInitializer(classType, genericType).getValue(classType, genericType, context);
+        return generateValue(classType, genericType, context);
+    }
+
+    public Object generateValue(Class<?> type,
+                                Type genericType,
+                                ClassTreeTraverserContext context) {
+        Initializer initializer = getSoleInitializer(type, genericType);
+
+        return initializer.getValue(type, genericType, context);
     }
 }
