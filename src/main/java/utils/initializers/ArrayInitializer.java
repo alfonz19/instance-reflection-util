@@ -9,8 +9,8 @@ import utils.GenericTypeUtil;
 public class ArrayInitializer extends ArrayLikeInitializerParent {
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
-        return type.isArray();
+    public boolean canProvideValueFor(Type genericType) {
+        return GenericTypeUtil.getClassType(genericType).isArray();
     }
 
     @Override

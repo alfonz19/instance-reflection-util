@@ -10,7 +10,7 @@ public class StringInitializer extends SimpleInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
+    public Object getValue(Type genericType, ClassTreeTraverserContext context) {
         return "RandomString: " + Long.toString(random.nextLong());
     }
 }

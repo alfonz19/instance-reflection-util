@@ -13,10 +13,10 @@ public class InitializingTraversingProcessor implements TraversingProcessor {
 
         //TODO MM: decision whether to set primitive values, or all values or only null values
 //            if (node.getValue() == null) {
-        Initializer initializer = initializers.getSoleInitializer(node.getType(), node.getGenericType());
+        Initializer initializer = initializers.getSoleInitializer(node.getGenericType());
 
         Object newValue =
-            initializer.getValue(node.getType(), node.getGenericType(), context);
+            initializer.getValue(node.getGenericType(), context);
 
         node.setValue(newValue);
 //            }

@@ -12,6 +12,14 @@ import org.apache.logging.log4j.Logger;
 public class GenericTypeUtil {
     private static final Logger log = LogManager.getLogger(GenericTypeUtil.class);
 
+    public static boolean isClassType(Type genericType) {
+        return genericType instanceof Class;
+    }
+
+    public static boolean isParameterizedType(Type genericType) {
+        return genericType instanceof ParameterizedType;
+    }
+
     public static Class<?> getClassType(Type genericType) {
         if (genericType instanceof Class) {
             return (Class) genericType;

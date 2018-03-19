@@ -18,9 +18,9 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
         List result = new ArrayList(itemCount);
         for (int i = 0; i < itemCount; i++) {
             try {
-                Initializer initializer = this.getInitializers().getSoleInitializer(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements);
+                Initializer initializer = this.getInitializers().getSoleInitializer(typeOfListElements);
 
-                Object newInstance = initializer.getValue(GenericTypeUtil.getClassType(typeOfListElements), typeOfListElements, context);
+                Object newInstance = initializer.getValue(typeOfListElements, context);
 
                 //noinspection unchecked
                 result.add(newInstance);
@@ -33,12 +33,12 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
+    public Object getValue(Type genericType, ClassTreeTraverserContext context) {
         //TODO MM: allow to specify subclasses to be instantiated as well.
         Type typeOfElements = getTypeOfElements(genericType);
 
         List listItems = createItemsForCollection(typeOfElements, context);
-        return instantiateCollection(type, typeOfElements, listItems);
+        return instantiateCollection(GenericTypeUtil.getClassType(genericType), typeOfElements, listItems);
     }
 
     protected abstract Type getTypeOfElements(Type genericType);

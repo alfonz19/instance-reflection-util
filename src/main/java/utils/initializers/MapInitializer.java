@@ -6,17 +6,18 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import utils.GenericTypeUtil;
 import utils.traverser.ClassTreeTraverserContext;
 
 public class MapInitializer extends RandomInitializer {
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
-        return Map.class.isAssignableFrom(type);
+    public boolean canProvideValueFor(Type genericType) {
+        return Map.class.isAssignableFrom(GenericTypeUtil.getClassType(genericType));
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
-        Map resultMap = instantiateMap(type);
+    public Object getValue(Type genericType, ClassTreeTraverserContext context) {
+        Map resultMap = instantiateMap(genericType);
 
         Type keyType = getKeyValueType(genericType, 0);
         Type valueType = getKeyValueType(genericType, 1);
@@ -40,7 +41,8 @@ public class MapInitializer extends RandomInitializer {
         }
     }
 
-    private Map instantiateMap(Class<?> type) {
+    private Map instantiateMap(Type genericType) {
+        Class<?> type = GenericTypeUtil.getClassType(genericType);
         int modifiers = type.getModifiers();
         boolean interfaceOrAbstractClass = type.isInterface() || Modifier.isAbstract(modifiers);
         if (interfaceOrAbstractClass) {

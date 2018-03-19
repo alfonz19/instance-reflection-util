@@ -11,8 +11,8 @@ import utils.GenericTypeUtil;
 public class SetInitializer extends ArrayLikeInitializerParent {
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
-        return Set.class.isAssignableFrom(type);
+    public boolean canProvideValueFor(Type genericType) {
+        return Set.class.isAssignableFrom(GenericTypeUtil.getClassType(genericType));
     }
 
     @Override

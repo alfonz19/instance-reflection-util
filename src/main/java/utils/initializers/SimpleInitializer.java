@@ -4,6 +4,8 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
+import utils.GenericTypeUtil;
+
 public abstract class SimpleInitializer extends RandomInitializer {
 
     private final List<Class<?>> classes;
@@ -17,7 +19,8 @@ public abstract class SimpleInitializer extends RandomInitializer {
     }
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
-        return classes.contains(type);
+    public boolean canProvideValueFor(Type genericType) {
+        return GenericTypeUtil.isClassType(genericType)
+            && classes.contains(GenericTypeUtil.getClassType(genericType));
     }
 }

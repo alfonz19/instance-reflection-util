@@ -11,7 +11,12 @@ import utils.GenericTypeUtil;
 public class CollectionOrIterableInitializer extends ArrayLikeInitializerParent {
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Type genericType) {
+        if (!(GenericTypeUtil.isClassType(genericType) || GenericTypeUtil.isParameterizedType(genericType))) {
+            return false;
+        }
+
+        Class<?> type = GenericTypeUtil.getClassType(genericType);
         return Collection.class.isAssignableFrom(type) || Iterable.class.isAssignableFrom(type);
     }
 
