@@ -1,5 +1,6 @@
 package utils.traverser;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class ClassTreeTraverserContext {
 
     private ClassTreeTraverserContext(ClassTreeTraverser classTreeTraverser, List<TraverserNode> nodesFromRoot) {
         this.classTreeTraverser = classTreeTraverser;
-        this.nodesFromRoot = nodesFromRoot;
+        this.nodesFromRoot = Collections.unmodifiableList(nodesFromRoot);
     }
 
     public ClassTreeTraverserContext subNode(TraverserNode node) {
@@ -44,9 +45,8 @@ public class ClassTreeTraverserContext {
         return new ClassTreeTraverserContext(classTreeTraverser, newNodesFromRoot);
     }
 
-    private List<TraverserNode> getNodesFromRoot() {
-        //we don't want to have access to setting value of already processed nodes!
-        throw new UnsupportedOperationException("DO NOT PROVIDE ACCESS TO NODES");
+    public List<TraverserNode> getNodesFromRoot() {
+        return this.nodesFromRoot;
     }
 
     public TraverserNode getCurrentNode() {

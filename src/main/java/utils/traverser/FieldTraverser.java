@@ -53,13 +53,13 @@ public class FieldTraverser implements ClassTreeTraverser {
             field.setAccessible(true);
             FieldTraverserNode node = new FieldTraverserNode(field, instance);
 
-            traversingProcessor.process(context.subNode(node));
+            traversingProcessor.process(new ModifiableFieldTraverserNode(node), context.subNode(node));
         }
     }
 
-    public static class FieldTraverserNode implements TraverserNode {
-        private final Field field;
-        private final Object instance;
+    private static class FieldTraverserNode implements TraverserNode {
+        protected final Field field;
+        protected final Object instance;
 
 
         public FieldTraverserNode(Field field, Object instance) {
@@ -77,15 +77,6 @@ public class FieldTraverser implements ClassTreeTraverser {
         }
 
         @Override
-        public void setValue(Object value) {
-            try {
-                field.set(instance, value);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
         public Type getGenericType() {
             return field.getGenericType();
         }
@@ -93,6 +84,25 @@ public class FieldTraverser implements ClassTreeTraverser {
         @Override
         public Class<?> getType() {
             return field.getType();
+        }
+    }
+
+    private static class ModifiableFieldTraverserNode extends FieldTraverserNode implements ModifiableTraverserNode {
+        public ModifiableFieldTraverserNode(Field field, Object instance) {
+            super(field, instance);
+        }
+
+        public ModifiableFieldTraverserNode(FieldTraverserNode node) {
+            this(node.field, node.instance);
+        }
+
+        @Override
+        public void setValue(Object value) {
+            try {
+                field.set(instance, value);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
