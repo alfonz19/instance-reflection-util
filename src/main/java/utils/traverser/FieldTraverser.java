@@ -51,49 +51,56 @@ public class FieldTraverser implements ClassTreeTraverser {
 
         for (Field field : fields) {
             field.setAccessible(true);
-            FieldTraverserNode node = new FieldTraverserNode(field, instance);
+            ModifiableFieldTraverserNode modifiableNode = new ModifiableFieldTraverserNode(field, instance);
 
-            traversingProcessor.process(new ModifiableFieldTraverserNode(node), context.subNode(node));
+            traversingProcessor.process(modifiableNode, context.subNode(modifiableNode.getTraverserNode()));
         }
     }
 
     private static class FieldTraverserNode implements TraverserNode {
-        protected final Field field;
-        protected final Object instance;
 
+        private final Object nodeValue;
+        private final Type genericType;
+        private final Class<?> type;
 
-        public FieldTraverserNode(Field field, Object instance) {
-            this.field = field;
-            this.instance = instance;
-        }
+        public FieldTraverserNode(ModifiableFieldTraverserNode node) {
+            Field field = node.getField();
+            Object instance = node.getInstance();
 
-        @Override
-        public Object getValue() {
             try {
-                return field.get(instance);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+                nodeValue = field.get(instance);
+                genericType = field.getGenericType();
+                type = field.getType();
+            } catch (Exception e) {
+                throw new RuntimeException();
             }
         }
 
         @Override
+        public Object getValue() {
+            return nodeValue;
+        }
+
+        @Override
         public Type getGenericType() {
-            return field.getGenericType();
+            return genericType;
         }
 
         @Override
         public Class<?> getType() {
-            return field.getType();
+            return type;
         }
     }
 
-    private static class ModifiableFieldTraverserNode extends FieldTraverserNode implements ModifiableTraverserNode {
-        public ModifiableFieldTraverserNode(Field field, Object instance) {
-            super(field, instance);
-        }
+    private static class ModifiableFieldTraverserNode implements ModifiableTraverserNode {
+        private final Field field;
+        private final Object instance;
+        private final FieldTraverserNode traverserNode;
 
-        public ModifiableFieldTraverserNode(FieldTraverserNode node) {
-            this(node.field, node.instance);
+        private ModifiableFieldTraverserNode(Field field, Object instance) {
+            this.field = field;
+            this.instance = instance;
+            traverserNode = new FieldTraverserNode(this);
         }
 
         @Override
@@ -103,6 +110,36 @@ public class FieldTraverser implements ClassTreeTraverser {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        public Field getField() {
+            return field;
+        }
+
+        public Object getInstance() {
+            return instance;
+        }
+
+        //-- delegated
+
+
+        @Override
+        public Object getValue() {
+            return traverserNode.getValue();
+        }
+
+        @Override
+        public Type getGenericType() {
+            return traverserNode.getGenericType();
+        }
+
+        @Override
+        public Class<?> getType() {
+            return traverserNode.getType();
+        }
+
+        public FieldTraverserNode getTraverserNode() {
+            return traverserNode;
         }
     }
 }
