@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+  <property name="LOG_BASE_DIR" value="${logging.baseDir:-/tmp}"/>
+  <property name="FULL_DATETIME" value="%d{yyyy-MM-dd HH:mm:ss.SSS}"/>
+  <property name="LOG_PATTERN" value="${FULL_DATETIME} [%thread] %-5level %logger{30} - %msg%n"/>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <Pattern>
+        ${LOG_PATTERN}
+      </Pattern>
+    </encoder>
+  </appender>
+
+  <!--<appender name="FILE"-->
+            <!--class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+    <!--<file>${LOG_BASE_DIR}/cch.log</file>-->
+    <!--<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">-->
+      <!--<Pattern>-->
+        <!--${LOG_PATTERN}-->
+      <!--</Pattern>-->
+    <!--</encoder>-->
+
+    <!--<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+      <!--&lt;!&ndash; rollover daily &ndash;&gt;-->
+      <!--<fileNamePattern>${LOG_BASE_DIR}/archived/cch.%d{yyyy-MM-dd}.log</fileNamePattern>-->
+      <!--&lt;!&ndash;<timeBasedFileNamingAndTriggeringPolicy&ndash;&gt;-->
+          <!--&lt;!&ndash;class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">&ndash;&gt;-->
+        <!--&lt;!&ndash;<maxFileSize>10MB</maxFileSize>&ndash;&gt;-->
+      <!--&lt;!&ndash;</timeBasedFileNamingAndTriggeringPolicy>&ndash;&gt;-->
+    <!--</rollingPolicy>-->
+
+  <!--</appender>-->
+
+  <!-- Send logs to both console and file -->
+  <logger name="utils" level="debug" />
+
+  <root level="info">
+    <appender-ref ref="STDOUT"/>
+    <!--<appender-ref ref="FILE"/>-->
+  </root>
+
+</configuration>

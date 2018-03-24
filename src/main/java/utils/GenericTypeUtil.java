@@ -6,11 +6,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GenericTypeUtil {
-    private static final Logger log = LogManager.getLogger(GenericTypeUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(GenericTypeUtil.class);
 
     public static Class<?> getClassType(Type genericType) {
         if (genericType instanceof Class) {
@@ -25,7 +25,7 @@ public class GenericTypeUtil {
                 //so we create here new array based on generic type and use that instance to get class type.
                 //this is far from ideal, thus one should avoid using this method if possible for finding out
                 //class type of array from generic type.
-                log.warn("Used inefficient query to get array class type.");
+                logger.warn("Used inefficient query to get array class type.");
                 return Array.newInstance((Class) ((ParameterizedType) genericArrayType.getGenericComponentType()).getRawType(),
                         0).getClass();
             } else {
