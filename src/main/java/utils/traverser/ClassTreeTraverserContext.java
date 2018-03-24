@@ -49,6 +49,10 @@ public class ClassTreeTraverserContext {
         return this.nodesFromRoot;
     }
 
+    public String getNodesFromRootAsNamesPath() {
+        return getNodesFromRoot().stream().map(TraverserNode::getNodeName).collect(Collectors.joining("."));
+    }
+
     public TraverserNode getCurrentNode() {
         if (this.nodesFromRoot.isEmpty()) {
             throw new IllegalStateException("Cannot get current node, when there's no current node. Traverse did not start yet?");
