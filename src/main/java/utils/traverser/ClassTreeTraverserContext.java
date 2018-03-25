@@ -64,4 +64,11 @@ public class ClassTreeTraverserContext {
     public Object processCurrentNodeInstance(Object instance) {
         return classTreeTraverser.process(instance, this);
     }
+
+    @Override
+    public String toString() {
+        return "ClassTreeTraverserContext{" +
+            "nodesFromRootAsNamesPath='" + getNodesFromRootAsNamesPath() + '\'' +
+            '}';
+    }
 }

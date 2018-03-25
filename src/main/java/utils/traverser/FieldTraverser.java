@@ -135,6 +135,15 @@ public class FieldTraverser implements ClassTreeTraverser {
         public Class<?> getInstanceClass() {
             return instanceClass;
         }
+
+        @Override
+        public String toString() {
+            return "FieldTraverserNode{" +
+                "declaringClassOfNode=" + declaringClassOfNode +
+                ", genericType=" + genericType +
+                ", instanceClass=" + instanceClass +
+                '}';
+        }
     }
 
     private static class ModifiableFieldTraverserNode implements ModifiableTraverserNode {
