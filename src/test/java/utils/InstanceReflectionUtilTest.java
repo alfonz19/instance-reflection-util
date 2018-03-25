@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings({"Duplicates", "WeakerAccess", "unused"})
 public class InstanceReflectionUtilTest {
@@ -338,6 +339,24 @@ public class InstanceReflectionUtilTest {
         assertPair(pair.second.pair, Integer.class, String.class);
     }
 
+    @Test
+    public void testClassWithGenericType_impossible() {
+        traverser.process(new ClassWithGenericType<String>());
+        fail("assertion not specified");
+    }
+
+    @Test
+    public void testClassWithGenericType() {
+        traverser.process(new ClassWithGenericType<String>(){});
+        fail("assertion not specified");
+    }
+
+    @Test
+    public void testClassWithGenericTypeGenericArray() {
+        traverser.process(new ClassWithGenericType<String[]>(){});
+        fail("assertion not specified");
+    }
+
     //--------------------------------------------------
 
     public static class A {
@@ -347,6 +366,10 @@ public class InstanceReflectionUtilTest {
     public static class B extends A{
         public Integer ii = null;
 
+    }
+
+    public static class ClassWithGenericType<T> {
+        public T t;
     }
 
     public static class ClassWithList {
