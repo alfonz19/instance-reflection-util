@@ -93,8 +93,12 @@ public class TypeVariableUtil {
                     return typeToSearchFor;
                 }
 
-                logger.debug("have to look up-the-path node for {}", typeToSearchFor);
-                return findActualTypeForTypeVariable(typeToSearchFor, context, previousNodeIndex);
+                if (typeToSearchFor instanceof TypeVariable) {
+                    logger.debug("have to look up-the-path node for {}", typeToSearchFor);
+                    return findActualTypeForTypeVariable(typeToSearchFor, context, previousNodeIndex);
+                } else {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
             } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
