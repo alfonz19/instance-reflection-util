@@ -25,26 +25,6 @@ public class TypeVariableUtil {
         return findActualTypeForTypeVariable(typeVariable, context, context.getNodesFromRoot().size() -1);
     }
 
-    /**
-     *
-     * @param typeVariable see {@link #findActualTypeForTypeVariable(TypeVariable, ClassTreeTraverserContext)}
-     * @param context see {@link #findActualTypeForTypeVariable(TypeVariable, ClassTreeTraverserContext)}
-     * @param nodeIndex index of node in traversing path which should be scanned.
-     * @return
-     */
-//    private static Type findActualTypeForTypeVariable(Type typeVariable, ClassTreeTraverserContext context, int nodeIndex) {
-//        logger.debug("------------------------");
-//
-////        TraverserNode node = context.getNodesFromRoot().get(nodeIndex);
-////        logger.debug("Looking for type variable '{}' in node '{}'", typeVariable, node);
-////
-////        Class<?> declaringClass = node.getDeclaringClass();
-////        return findActualTypeForTypeVariable(typeVariable, context, nodeIndex, node, declaringClass);
-//
-//
-//        return findActualTypeForTypeVariable(typeVariable, context, nodeIndex);
-//    }
-
     private static Type findActualTypeForTypeVariable(Type typeVariable,
                                                       ClassTreeTraverserContext context,
                                                       int nodeIndex) {
@@ -70,18 +50,6 @@ public class TypeVariableUtil {
         boolean declaredInInstanceClass = declaringClass.equals(instanceClass);
 
         if (!declaredInInstanceClass) {
-            //here it's not the same class, meaning, that this node was inherited, so we have to check subclass (because only subclass can subsitute type variable for something specific)
-            //and keep doing that, until condition above is true.
-
-            //here we have to peek at genericsuperclass, and if it does not answer question, then loop it, finding it eventually.
-//            Class<?> subclass = findSubclass(scanInClass, instanceClass);
-//            logger.debug("Node is defined in '{}', but instance has different class: '{}'. Checking subclass '{}'.",
-//                scanInClass,
-//                instanceClass,
-//                subclass);
-
-//            return findActualTypeForTypeVariable(typeVariable, context, nodeIndex, node, subclass);
-
             Class<?> scanInClass = instanceClass;
             while (scanInClass.getSuperclass().equals(declaringClass)) {
                 scanInClass = scanInClass.getSuperclass();
@@ -164,12 +132,6 @@ public class TypeVariableUtil {
         }
         return -1;
     }
-
-//        private Type getTypeFromSuperClass(TypeVariable typeVariable, TraverserNode traverserNode) {
-//            TypeVariable[] classTypeParametersOfSuperClassUpThePath = traverserNode.getDeclaringClassTypeParameters();
-//            int index3 = indexOfTypeVariable(typeVariable, classTypeParametersOfSuperClassUpThePath);
-//            return classTypeParametersOfSuperClassUpThePath[index3];
-//        }
 }
 
 
