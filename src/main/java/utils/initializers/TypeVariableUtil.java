@@ -38,7 +38,7 @@ public class TypeVariableUtil {
         TypeVariable[] typeParametersOfClass = declaringClass.getTypeParameters();
 
         logger.debug("Class has type parameters: '{}'", Arrays.asList(typeParametersOfClass));
-        int indexOfTypeVariable = indexOfTypeVariable(typeVariable, typeParametersOfClass);
+        int indexOfTypeVariable = Arrays.asList((Type[]) typeParametersOfClass).indexOf(typeVariable);
         if (indexOfTypeVariable == -1) {
             throw new UnsupportedOperationException("Not implemented yet -- declaring class does not have type parameters, the type parameter must come from different location. Method parameter?");
         }
@@ -105,18 +105,6 @@ public class TypeVariableUtil {
             logger.debug("Node is defined in instance class, no super class, no parent node, nowhere to look for generic type definition.");
             throw new RuntimeException("Unable to determine type, due to type erasure or object tree.");   //TODO MM: better exception.
         }
-    }
-
-
-    private static int indexOfTypeVariable(Type type,
-                                    Type[] types) {
-        for (int i = 0, length = types.length; i < length; i++) {
-            Type itemAtIndex = types[i];
-            if (itemAtIndex.equals(type)) {
-                return i;
-            }
-        }
-        return -1;
     }
 }
 
