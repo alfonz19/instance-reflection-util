@@ -16,6 +16,7 @@ import utils.traverser.FieldTraverser;
 import utils.traverser.InitializingTraversingProcessor;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -23,7 +24,6 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 @SuppressWarnings({"Duplicates", "WeakerAccess", "unused"})
 public class InstanceReflectionUtilTest {
@@ -321,9 +321,10 @@ public class InstanceReflectionUtilTest {
     @Test
     public void testClassWithPairHavingTypeDefinedInClass_impossible()  {
         ClassWithPairHavingTypeDefinedInClass<String, Integer> instance = new ClassWithPairHavingTypeDefinedInClass<>();
+
+        this.expectedException.expect(RuntimeException.class);
+        this.expectedException.expectMessage("Unable to determine type, due to type erasure or object tree.");
         ClassWithPairHavingTypeDefinedInClass<String, Integer> process = traverser.process(instance);
-        Pair<String, Integer> pair = process.pair;
-        assertPair(pair, String.class, Integer.class);
     }
 
     @Test
@@ -341,20 +342,59 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testClassWithGenericType_impossible() {
+        this.expectedException.expect(RuntimeException.class);
+        this.expectedException.expectMessage("Unable to determine type, due to type erasure or object tree.");
         traverser.process(new ClassWithGenericType<String>());
-        fail("assertion not specified");
     }
 
     @Test
     public void testClassWithGenericType() {
-        traverser.process(new ClassWithGenericType<String>(){});
-        fail("assertion not specified");
+        ClassWithGenericType<String> instance =
+            traverser.process(new ClassWithGenericType<String>() {});
+
+        assertThat(instance.t, notNullValue());
+        assertThat(instance.t, isA(String.class));
+        assertTrue(instance.t.length() > 0);
+
     }
 
     @Test
     public void testClassWithGenericTypeGenericArray() {
-        traverser.process(new ClassWithGenericType<String[]>(){});
-        fail("assertion not specified");
+        ClassWithGenericType<String[]> instance =
+            traverser.process(new ClassWithGenericType<String[]>() {});
+
+        assertThat(instance.t.getClass().isArray(), is(true));
+        assertTrue(instance.t.length > 0);
+        assertEquals(instance.t.getClass().getComponentType(), String.class);
+        for (String s : instance.t) {
+            assertThat(s, notNullValue());
+            assertTrue(s.length() > 0);
+        }
+    }
+
+    @Test
+    public void testSubClassWithGenericTypeGenericArray() {
+        SubClassWithGenericType<Integer[]> instance =
+            traverser.process(new SubClassWithGenericType<Integer[]>() {});
+
+        assertThat(instance.t, notNullValue());
+        assertTrue(instance.t.getClass().isArray());
+        assertEquals(instance.t.getClass().getComponentType(), Integer.class);
+        assertThat(instance.t, notNullValue());
+        assertTrue(instance.t.length > 0);
+        for (Integer i : instance.t) {
+            assertThat(i, notNullValue());
+        }
+    }
+
+    @Test
+    public void testSubClassWithGenericType() {
+        SubClassWithGenericType<String> instance =
+            traverser.process(new SubClassWithGenericType<String>() {});
+
+        assertThat(instance.t, notNullValue());
+        assertThat(instance.t, isA(String.class));
+        assertTrue(instance.t.length() > 0);
     }
 
     //--------------------------------------------------
@@ -371,6 +411,10 @@ public class InstanceReflectionUtilTest {
     public static class ClassWithGenericType<T> {
         public T t;
     }
+
+    public static class SubClassWithGenericType<K> extends ClassWithGenericType<K>{
+    }
+
 
     public static class ClassWithList {
         public List<B> list;

@@ -2,7 +2,6 @@ package utils.traverser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 
 public class FieldTraverser implements ClassTreeTraverser {
     private final TraversingProcessor traversingProcessor;
@@ -38,7 +37,7 @@ public class FieldTraverser implements ClassTreeTraverser {
         do {
             processFieldsInCurrentClass(instance, instanceClass, context);
             instanceClass = instanceClass.getSuperclass();
-        } while (!instanceClass.isAssignableFrom(stopClazz));
+        } while (instanceClass != null && !instanceClass.isAssignableFrom(stopClazz));
 
 
 
@@ -68,7 +67,6 @@ public class FieldTraverser implements ClassTreeTraverser {
             return new FieldTraverserNode(field.get(instance),
                 field.getGenericType(),
                 field.getType(),
-                field.getDeclaringClass().getTypeParameters(),
                 field.getDeclaringClass(),
                 instance.getClass(),
                 field.getName());
@@ -82,7 +80,6 @@ public class FieldTraverser implements ClassTreeTraverser {
         private final Object nodeValue;
         private final Type genericType;
         private final Class<?> type;
-        private final TypeVariable<? extends Class<?>>[] typeParametersOfDeclaringClass;
         private final Class<?> declaringClassOfNode;
         private final Class<?> instanceClass;
         private final String fieldName;
@@ -90,12 +87,10 @@ public class FieldTraverser implements ClassTreeTraverser {
         private FieldTraverserNode(Object nodeValue,
                                    Type genericType,
                                    Class<?> type,
-                                   TypeVariable<? extends Class<?>>[] typeParametersOfDeclaringClass,
                                    Class<?> declaringClassOfNode, Class<?> instanceClass, String fieldName) {
             this.nodeValue = nodeValue;
             this.genericType = genericType;
             this.type = type;
-            this.typeParametersOfDeclaringClass = typeParametersOfDeclaringClass;
             this.declaringClassOfNode = declaringClassOfNode;
             this.instanceClass = instanceClass;
             this.fieldName = fieldName;
@@ -122,12 +117,7 @@ public class FieldTraverser implements ClassTreeTraverser {
         }
 
         @Override
-        public TypeVariable<? extends Class<?>>[] getDeclaringClassTypeParameters() {
-            return typeParametersOfDeclaringClass;
-        }
-
-        @Override
-        public Class<?> getDeclaringClassOfNode() {
+        public Class<?> getDeclaringClass() {
             return declaringClassOfNode;
         }
 
@@ -189,13 +179,8 @@ public class FieldTraverser implements ClassTreeTraverser {
         }
 
         @Override
-        public TypeVariable<? extends Class<?>>[] getDeclaringClassTypeParameters() {
-            return traverserNode.getDeclaringClassTypeParameters();
-        }
-
-        @Override
-        public Class<?> getDeclaringClassOfNode() {
-            return traverserNode.getDeclaringClassOfNode();
+        public Class<?> getDeclaringClass() {
+            return traverserNode.getDeclaringClass();
         }
 
         @Override

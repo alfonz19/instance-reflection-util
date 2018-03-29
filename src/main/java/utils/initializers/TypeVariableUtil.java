@@ -4,6 +4,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,64 +32,148 @@ public class TypeVariableUtil {
      * @param nodeIndex index of node in traversing path which should be scanned.
      * @return
      */
-    private static Type findActualTypeForTypeVariable(Type typeVariable, ClassTreeTraverserContext context, int nodeIndex) {
-        logger.debug("------------------------");
+//    private static Type findActualTypeForTypeVariable(Type typeVariable, ClassTreeTraverserContext context, int nodeIndex) {
+//        logger.debug("------------------------");
+//
+////        TraverserNode node = context.getNodesFromRoot().get(nodeIndex);
+////        logger.debug("Looking for type variable '{}' in node '{}'", typeVariable, node);
+////
+////        Class<?> declaringClass = node.getDeclaringClass();
+////        return findActualTypeForTypeVariable(typeVariable, context, nodeIndex, node, declaringClass);
+//
+//
+//        return findActualTypeForTypeVariable(typeVariable, context, nodeIndex);
+//    }
+
+    private static Type findActualTypeForTypeVariable(Type typeVariable,
+                                                      ClassTreeTraverserContext context,
+                                                      int nodeIndex) {
 
         TraverserNode node = context.getNodesFromRoot().get(nodeIndex);
-        logger.debug("Looking for type variable '{}' in node '{}'", typeVariable, node);
+        logger.debug("Looking for type variable '{}' in node\n'{}'", typeVariable, node);
 
-        TypeVariable[] typeParametersOfDeclaringClass =
-                node.getDeclaringClassTypeParameters();
+        Class<?> declaringClass = node.getDeclaringClass();
 
-        logger.debug("find declaring class parameters: '{}'", Arrays.asList(typeParametersOfDeclaringClass));
-        int indexOfTypeVariable = indexOfTypeVariable(typeVariable, typeParametersOfDeclaringClass);
+
+        Class<?> instanceClass = node.getInstanceClass();
+        TypeVariable[] typeParametersOfClass = declaringClass.getTypeParameters();
+
+        logger.debug("Class has type parameters: '{}'", Arrays.asList(typeParametersOfClass));
+        int indexOfTypeVariable = indexOfTypeVariable(typeVariable, typeParametersOfClass);
         if (indexOfTypeVariable == -1) {
-            throw new UnsupportedOperationException("Not implemented yet -- declaring class does not have type parameters, the type parameter must come from different location");
+            throw new UnsupportedOperationException("Not implemented yet -- declaring class does not have type parameters, the type parameter must come from different location. Method parameter?");
         }
 
         logger.debug("Found that type variable defined in declaring class at index '{}'.", indexOfTypeVariable);
 
         //we check, if class 'node' is declared at is the same class as the one instance is class of.
-        boolean declaredInInstanceClass = node.getDeclaringClassOfNode().equals(node.getInstanceClass());
+        boolean declaredInInstanceClass = declaringClass.equals(instanceClass);
 
         if (!declaredInInstanceClass) {
-            //here it's not the same class, meaning, that this node was inherited, so we have to check parent class
+            //here it's not the same class, meaning, that this node was inherited, so we have to check subclass (because only subclass can subsitute type variable for something specific)
             //and keep doing that, until condition above is true.
-            logger.debug("Node is defined in '{}', but instance has different class: '{}'. Checking superclass.",
-                node.getDeclaringClassOfNode(),
-                node.getInstanceClass());
-            throw new UnsupportedOperationException("Not implemented yet");//return findActualTypeForTypeVariable(typeVariable);
-        } else {
-            //if it is, we proceed scan in node through we got here, as the type variable has to be defined there.
 
-            if (nodeIndex >0) {
-                //there is some up-the-path node we can scan.
+            //here we have to peek at genericsuperclass, and if it does not answer question, then loop it, finding it eventually.
+//            Class<?> subclass = findSubclass(scanInClass, instanceClass);
+//            logger.debug("Node is defined in '{}', but instance has different class: '{}'. Checking subclass '{}'.",
+//                scanInClass,
+//                instanceClass,
+//                subclass);
 
-                logger.debug("Node is defined in instance class, not checking superclass, proceeding with node up the path.");
-                int previousNodeIndex = nodeIndex - 1;
-                TraverserNode previousNode = context.getNodesFromRoot().get(previousNodeIndex);
-                Type genericTypeOfPreviousNode = previousNode.getGenericType();
-                if (genericTypeOfPreviousNode instanceof Class) {
-                    throw new UnsupportedOperationException("Previous node is not parameterized, which means, that type cannot be inferred.");
-                }
+//            return findActualTypeForTypeVariable(typeVariable, context, nodeIndex, node, subclass);
 
-                if (genericTypeOfPreviousNode instanceof ParameterizedType) {
-                    Type typeToSearchFor =
-                    ((ParameterizedType) genericTypeOfPreviousNode).getActualTypeArguments()[indexOfTypeVariable];
-
-                    logger.debug("have to look up-the-path node for {}", typeToSearchFor);
-                    return findActualTypeForTypeVariable(typeToSearchFor, context, previousNodeIndex);
+            Class<?> scanInClass = instanceClass;
+            while (scanInClass.getSuperclass().equals(declaringClass)) {
+                scanInClass = scanInClass.getSuperclass();
+            }
+            Type genericSuperclass = scanInClass.getGenericSuperclass();
+            if (genericSuperclass instanceof ParameterizedType) {
+                Type typeFoundInParent = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[indexOfTypeVariable];
+                if (typeFoundInParent instanceof Class) {
+                    return typeFoundInParent;
                 } else {
+//                    looping! if it's type variable again, it might get renamed, so we have to reassign declaring class, and start again from instanceClass. Easy.
                     throw new UnsupportedOperationException("Not implemented yet");
                 }
-
-            } else {
-                //the type value can be only in up-the-path node, but there's none.
-
-                logger.debug("Node is defined in instance class.");
+            } if (genericSuperclass instanceof Class) {
+                return genericSuperclass;
+            }else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
+
+
+            //if we reach here, it means that type wasnt found in superclass.
         }
+
+        //scan in superclasses couldn't be used or failed. We proceed scan in node through we got here,
+        //as the type variable has to be defined there.
+        if (nodeIndex >0) {
+            //there is some up-the-path node we can scan.
+
+            logger.debug("Node is defined in instance class, not checking superclass, proceeding with node up the path.");
+            int previousNodeIndex = nodeIndex - 1;
+            TraverserNode previousNode = context.getNodesFromRoot().get(previousNodeIndex);
+            Type genericTypeOfPreviousNode = previousNode.getGenericType();
+            if (genericTypeOfPreviousNode instanceof Class) {
+                throw new UnsupportedOperationException("Previous node is not parameterized, which means, that type cannot be inferred.");
+            }
+
+            if (genericTypeOfPreviousNode instanceof ParameterizedType) {
+                Type typeToSearchFor =
+                    ((ParameterizedType) genericTypeOfPreviousNode).getActualTypeArguments()[indexOfTypeVariable];
+
+                if (typeToSearchFor instanceof Class) {
+                    return typeToSearchFor;
+                }
+
+                logger.debug("have to look up-the-path node for {}", typeToSearchFor);
+                return findActualTypeForTypeVariable(typeToSearchFor, context, previousNodeIndex);
+            } else {
+                throw new UnsupportedOperationException("Not implemented yet");
+            }
+
+        } else {
+            //the type value can be only in up-the-path node, but there's none.
+
+            logger.debug("Node is defined in instance class, no super class, no parent node, nowhere to look for generic type definition.");
+            throw new RuntimeException("Unable to determine type, due to type erasure or object tree.");   //TODO MM: better exception.
+        }
+    }
+
+    private static Class<?> findSubclass(Class<?> scanInClass, Class<?> instanceClass) {
+        if (Objects.requireNonNull(scanInClass).equals((Objects.requireNonNull(instanceClass)))) {
+            throw new IllegalArgumentException("expected, that 'scanInClass would be parent of instanceClass.");
+        }
+
+        Class<?> clazz = instanceClass;
+        while (!clazz.getSuperclass().equals(scanInClass)) {
+            clazz = clazz.getSuperclass();
+        }
+
+        return clazz;
+    }
+
+
+    private static int indexOfTypeVariable(Type type,
+                                    Type[] types) {
+        for (int i = 0, length = types.length; i < length; i++) {
+            Type itemAtIndex = types[i];
+            if (itemAtIndex.equals(type)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+//        private Type getTypeFromSuperClass(TypeVariable typeVariable, TraverserNode traverserNode) {
+//            TypeVariable[] classTypeParametersOfSuperClassUpThePath = traverserNode.getDeclaringClassTypeParameters();
+//            int index3 = indexOfTypeVariable(typeVariable, classTypeParametersOfSuperClassUpThePath);
+//            return classTypeParametersOfSuperClassUpThePath[index3];
+//        }
+}
+
+
+
 
 
 
@@ -129,23 +214,3 @@ public class TypeVariableUtil {
 //                }
 //            }
 //        }
-    }
-
-
-    private static int indexOfTypeVariable(Type type,
-                                    Type[] types) {
-        for (int i = 0, length = types.length; i < length; i++) {
-            Type itemAtIndex = types[i];
-            if (itemAtIndex.equals(type)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-//        private Type getTypeFromSuperClass(TypeVariable typeVariable, TraverserNode traverserNode) {
-//            TypeVariable[] classTypeParametersOfSuperClassUpThePath = traverserNode.getDeclaringClassTypeParameters();
-//            int index3 = indexOfTypeVariable(typeVariable, classTypeParametersOfSuperClassUpThePath);
-//            return classTypeParametersOfSuperClassUpThePath[index3];
-//        }
-}
