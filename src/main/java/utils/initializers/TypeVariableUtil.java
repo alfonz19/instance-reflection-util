@@ -4,7 +4,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,7 @@ public class TypeVariableUtil {
 
         if (!declaredInInstanceClass) {
             Class<?> scanInClass = instanceClass;
-            while (scanInClass.getSuperclass().equals(declaringClass)) {
+            while (!scanInClass.getSuperclass().equals(declaringClass)) {
                 scanInClass = scanInClass.getSuperclass();
             }
             Type genericSuperclass = scanInClass.getGenericSuperclass();
@@ -106,19 +105,6 @@ public class TypeVariableUtil {
             logger.debug("Node is defined in instance class, no super class, no parent node, nowhere to look for generic type definition.");
             throw new RuntimeException("Unable to determine type, due to type erasure or object tree.");   //TODO MM: better exception.
         }
-    }
-
-    private static Class<?> findSubclass(Class<?> scanInClass, Class<?> instanceClass) {
-        if (Objects.requireNonNull(scanInClass).equals((Objects.requireNonNull(instanceClass)))) {
-            throw new IllegalArgumentException("expected, that 'scanInClass would be parent of instanceClass.");
-        }
-
-        Class<?> clazz = instanceClass;
-        while (!clazz.getSuperclass().equals(scanInClass)) {
-            clazz = clazz.getSuperclass();
-        }
-
-        return clazz;
     }
 
 

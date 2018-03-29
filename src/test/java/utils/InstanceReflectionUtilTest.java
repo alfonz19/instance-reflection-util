@@ -303,9 +303,9 @@ public class InstanceReflectionUtilTest {
     private <T,K> void assertPair(Pair<T, K> pair, Class<?> firstClass, Class<?> secondClass) {
         assertThat(pair, notNullValue());
         assertThat(pair.first, notNullValue());
-        assertTrue(pair.first.getClass().equals(firstClass));
+        assertEquals(pair.first.getClass(), firstClass);
         assertThat(pair.second, notNullValue());
-        assertTrue(pair.second.getClass().equals(secondClass));
+        assertEquals(pair.second.getClass(), secondClass);
     }
 
     @Test

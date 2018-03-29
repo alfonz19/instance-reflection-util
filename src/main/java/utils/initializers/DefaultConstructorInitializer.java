@@ -10,6 +10,9 @@ public class DefaultConstructorInitializer extends InitializerParent {
     @Override
     public boolean canProvideValueFor(Class<?> type, Type genericType) {
         try {
+            if (Object.class.equals(type)) {
+                return false;
+            }
             type.getConstructor();
             return true;
         } catch(Exception e) {
