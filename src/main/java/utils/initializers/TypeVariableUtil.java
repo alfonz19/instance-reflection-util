@@ -19,7 +19,7 @@ public class TypeVariableUtil {
      * @return generic type used to define type variable.
      */
     public static Type findActualTypeForTypeVariable(TypeVariable typeVariable, ClassTreeTraverserContext context) {
-        logger.debug("Looking for type variable '{}' for context '{}'", typeVariable, context);
+        logger.debug("Looking for type variable '{}' for at path '{}'", typeVariable, context.getNodesFromRootAsNamesPath());
 
         return findActualTypeForTypeVariable(typeVariable, context, context.getNodesFromRoot().size() -1);
     }
@@ -29,7 +29,10 @@ public class TypeVariableUtil {
                                                       int nodeIndex) {
 
         TraverserNode node = context.getNodesFromRoot().get(nodeIndex);
-        logger.debug("Looking for type variable '{}' in node\n'{}'", typeVariable, node);
+        logger.debug("Looking for type variable '{}' in node:\n\t\tdeclaringClass ='{}',\n\t\t instanceClass='{}'",
+                typeVariable,
+                node.getDeclaringClass(),
+                node.getInstanceClass());
 
         Class<?> declaringClass = node.getDeclaringClass();
 
@@ -62,9 +65,9 @@ public class TypeVariableUtil {
 //                    looping! if it's type variable again, it might get renamed, so we have to reassign declaring class, and start again from instanceClass. Easy.
                     throw new UnsupportedOperationException("Not implemented yet");
                 }
-            } if (genericSuperclass instanceof Class) {
+            } else if (genericSuperclass instanceof Class) {
                 return genericSuperclass;
-            }else {
+            } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
 

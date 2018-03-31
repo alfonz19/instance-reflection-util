@@ -397,6 +397,20 @@ public class InstanceReflectionUtilTest {
         assertTrue(instance.t.length() > 0);
     }
 
+    @Test
+    public void testSubSubClassWithGenericType() {
+        SubSubClassWithGenericType<String> instance =
+            traverser.process(new SubSubClassWithGenericType<String>() {});
+
+        assertThat(instance.t, notNullValue());
+        assertThat(instance.t.getClass().isArray(), is(true));
+        assertTrue(instance.t.length > 0);
+        for (String s : instance.t) {
+            assertThat(s, notNullValue());
+            assertThat(s.isEmpty(), is(false));
+        }
+    }
+
     //--------------------------------------------------
 
     public static class A {
@@ -413,6 +427,9 @@ public class InstanceReflectionUtilTest {
     }
 
     public static class SubClassWithGenericType<K> extends ClassWithGenericType<K>{
+    }
+
+    public static class SubSubClassWithGenericType<Q> extends SubClassWithGenericType<Q[]>{
     }
 
 
