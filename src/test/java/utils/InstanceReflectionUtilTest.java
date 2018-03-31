@@ -1,6 +1,7 @@
 package utils;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,7 +15,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import utils.traverser.FieldTraverser;
 import utils.traverser.InitializingTraversingProcessor;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.not;
@@ -399,8 +399,8 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testSubSubClassWithGenericType() {
-        SubSubClassWithGenericType<String> instance =
-            traverser.process(new SubSubClassWithGenericType<String>() {});
+        SubSubClassWithGenericType<Date, String> instance =
+            traverser.process(new SubSubClassWithGenericType<Date, String>() {});
 
         assertThat(instance.t, notNullValue());
         assertThat(instance.t.getClass().isArray(), is(true));
@@ -429,7 +429,8 @@ public class InstanceReflectionUtilTest {
     public static class SubClassWithGenericType<K> extends ClassWithGenericType<K>{
     }
 
-    public static class SubSubClassWithGenericType<Q> extends SubClassWithGenericType<Q[]>{
+    //X is unused, it's "used" here only to confuse type inference.
+    public static class SubSubClassWithGenericType<X, Q> extends SubClassWithGenericType<Q[]>{
     }
 
 

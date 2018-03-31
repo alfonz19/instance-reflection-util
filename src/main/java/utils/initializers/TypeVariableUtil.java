@@ -1,9 +1,12 @@
 package utils.initializers;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,41 +41,21 @@ public class TypeVariableUtil {
 
 
         Class<?> instanceClass = node.getInstanceClass();
-        TypeVariable[] typeParametersOfClass = declaringClass.getTypeParameters();
-
-        logger.debug("Class has type parameters: '{}'", Arrays.asList(typeParametersOfClass));
-        int indexOfTypeVariable = Arrays.asList((Type[]) typeParametersOfClass).indexOf(typeVariable);
-        if (indexOfTypeVariable == -1) {
-            throw new UnsupportedOperationException("Not implemented yet -- declaring class does not have type parameters, the type parameter must come from different location. Method parameter?");
-        }
-
-        logger.debug("Found that type variable defined in declaring class at index '{}'.", indexOfTypeVariable);
 
         //we check, if class 'node' is declared at is the same class as the one instance is class of.
         boolean declaredInInstanceClass = declaringClass.equals(instanceClass);
 
         if (!declaredInInstanceClass) {
-            Class<?> scanInClass = instanceClass;
-            while (!scanInClass.getSuperclass().equals(declaringClass)) {
-                scanInClass = scanInClass.getSuperclass();
-            }
-            Type genericSuperclass = scanInClass.getGenericSuperclass();
-            if (genericSuperclass instanceof ParameterizedType) {
-                Type typeFoundInParent = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[indexOfTypeVariable];
-                if (typeFoundInParent instanceof Class) {
-                    return typeFoundInParent;
-                } else {
-//                    looping! if it's type variable again, it might get renamed, so we have to reassign declaring class, and start again from instanceClass. Easy.
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-            } else if (genericSuperclass instanceof Class) {
-                return genericSuperclass;
-            } else {
-                throw new UnsupportedOperationException("Not implemented yet");
+            Optional<Type> foundType = findTypeVariableInSuperClassOfDeclaringClass(
+                    declaringClass,
+                    instanceClass,
+                    typeVariable);
+
+            if (foundType.isPresent()) {
+                return foundType.get();
             }
 
-
-            //if we reach here, it means that type wasnt found in superclass.
+            //if we reach here, it means that type wasn't found in superclasses.
         }
 
         //scan in superclasses couldn't be used or failed. We proceed scan in node through we got here,
@@ -89,6 +72,8 @@ public class TypeVariableUtil {
             }
 
             if (genericTypeOfPreviousNode instanceof ParameterizedType) {
+                int indexOfTypeVariable = getIndexOfTypeVariableInGenericClassTypes(typeVariable, declaringClass);
+
                 Type typeToSearchFor =
                     ((ParameterizedType) genericTypeOfPreviousNode).getActualTypeArguments()[indexOfTypeVariable];
 
@@ -111,6 +96,60 @@ public class TypeVariableUtil {
 
             logger.debug("Node is defined in instance class, no super class, no parent node, nowhere to look for generic type definition.");
             throw new RuntimeException("Unable to determine type, due to type erasure or object tree.");   //TODO MM: better exception.
+        }
+    }
+
+    private static int getIndexOfTypeVariableInGenericClassTypes(Type typeVariable, Class<?> declaringClass) {
+        logger.debug("Searching type parameter '{}' in class '{}' definition", typeVariable, declaringClass);
+
+        TypeVariable[] typeParametersOfClass = declaringClass.getTypeParameters();
+
+        logger.debug("Class has type parameters: '{}'", Arrays.asList(typeParametersOfClass));
+        int indexOfTypeVariable = Arrays.asList((Type[]) typeParametersOfClass).indexOf(typeVariable);
+        if (indexOfTypeVariable == -1) {
+            throw new UnsupportedOperationException("Not implemented yet -- declaring class does not have type parameters, the type parameter must come from different location. Method parameter?");
+        }
+
+        logger.debug("Found that type variable defined in declaring class at index '{}'.", indexOfTypeVariable);
+        return indexOfTypeVariable;
+    }
+
+    private static Optional<Type> findTypeVariableInSuperClassOfDeclaringClass(Class<?> declaringClass,
+                                                                               Class<?> instanceClass,
+                                                                               Type typeVariable) {
+
+        //start with instance class, and find Class, which superclass is superclass of given declaring class.
+        //so 2 classes above. Why? Because we need to get Type, and that can be obtained only via getGenericSuperclass
+        //but you cannot repeatedly call that method ...
+        Class<?> scanInClass = instanceClass;
+        while (!scanInClass.getSuperclass().equals(declaringClass)) {
+            scanInClass = scanInClass.getSuperclass();
+        }
+
+        //after found that node as mentioned above, we finally get Type of superclass of declaring class.
+        Type genericSuperclass = scanInClass.getGenericSuperclass();
+
+        int indexOfTypeVariable = getIndexOfTypeVariableInGenericClassTypes(typeVariable, declaringClass);
+
+        if (genericSuperclass instanceof ParameterizedType) {
+            Type typeFoundInParent = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[indexOfTypeVariable];
+            if (typeFoundInParent instanceof Class) {
+                return Optional.of(typeFoundInParent);
+            } else if (typeFoundInParent instanceof TypeVariable){
+                return findTypeVariableInSuperClassOfDeclaringClass(scanInClass, instanceClass, typeFoundInParent);
+            } else {
+
+                //here I got: ClassWithPairHavingTypeDefinedInClass<X,Y> — so I have to instanciate this class, and continue scan for type variables X and Y
+                throw new UnsupportedOperationException("Not implemented yet");
+            }
+        } else if (genericSuperclass instanceof Class) {
+            return Optional.empty();
+        } else if (genericSuperclass instanceof GenericArrayType) {
+            return Optional.of(((GenericArrayType) genericSuperclass).getGenericComponentType());
+        } else if (genericSuperclass instanceof WildcardType) {
+            throw new UnsupportedOperationException("Not implemented yet");
+        } else {
+            throw new UnsupportedOperationException("Not implemented yet");
         }
     }
 }
