@@ -87,7 +87,9 @@ public class FieldTraverser implements ClassTreeTraverser {
         private FieldTraverserNode(Object nodeValue,
                                    Type genericType,
                                    Class<?> type,
-                                   Class<?> declaringClassOfNode, Class<?> instanceClass, String fieldName) {
+                                   Class<?> declaringClassOfNode,
+                                   Class<?> instanceClass,
+                                   String fieldName) {
             this.nodeValue = nodeValue;
             this.genericType = genericType;
             this.type = type;

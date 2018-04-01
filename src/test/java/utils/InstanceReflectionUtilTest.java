@@ -399,14 +399,30 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testSubSubClassWithGenericType() {
-        SubSubClassWithGenericType<Date, String> instance =
-            traverser.process(new SubSubClassWithGenericType<Date, String>() {});
+        SubSubClassWithGenericArrayType<Date, String> instance =
+            traverser.process(new SubSubClassWithGenericArrayType<Date, String>() {});
 
         assertThat(instance.t, notNullValue());
         assertThat(instance.t.getClass().isArray(), is(true));
         assertTrue(instance.t.length > 0);
         for (String s : instance.t) {
             assertThat(s, notNullValue());
+            assertThat(s.isEmpty(), is(false));
+        }
+    }
+
+    @Test
+    public void testSubSubClassWithGenericList() {
+        SubSubClassWithGenericList<Date, String> instance =
+            traverser.process(new SubSubClassWithGenericList<Date, String>() {});
+
+        assertThat(instance.t, notNullValue());
+        assertEquals(instance.t.getClass(), List.class);
+        assertTrue(instance.t.size() > 0);
+        for (String s : instance.t) {
+            assertThat(s, notNullValue());
+            assertEquals(s.getClass(), String.class);
+
             assertThat(s.isEmpty(), is(false));
         }
     }
@@ -430,7 +446,11 @@ public class InstanceReflectionUtilTest {
     }
 
     //X is unused, it's "used" here only to confuse type inference.
-    public static class SubSubClassWithGenericType<X, Q> extends SubClassWithGenericType<Q[]>{
+    public static class SubSubClassWithGenericArrayType<X, Q> extends SubClassWithGenericType<Q[]>{
+    }
+
+    //X is unused, it's "used" here only to confuse type inference.
+    public static class SubSubClassWithGenericList<X, Q> extends SubClassWithGenericType<List<Q>>{
     }
 
 

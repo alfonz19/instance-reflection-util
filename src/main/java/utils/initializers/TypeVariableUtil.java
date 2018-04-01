@@ -29,7 +29,7 @@ public class TypeVariableUtil {
 
     private static Type findActualTypeForTypeVariable(Type typeVariable,
                                                       ClassTreeTraverserContext context,
-                                                      int nodeIndex) {
+                                                      int nodeIndex) {     //TODO MM: this is ugly, nodes, can have reference to previous node. Then is not needed to pass context (probably) and index.
 
         TraverserNode node = context.getNodesFromRoot().get(nodeIndex);
         logger.debug("Looking for type variable '{}' in node:\n\t\tdeclaringClass ='{}',\n\t\t instanceClass='{}'",
@@ -37,15 +37,16 @@ public class TypeVariableUtil {
                 node.getDeclaringClass(),
                 node.getInstanceClass());
 
+
+        //----//TODO MM: probably from here to and of scan in parents — this can be extracted to one method/util, since optional is used anyway.
         Class<?> declaringClass = node.getDeclaringClass();
-
-
         Class<?> instanceClass = node.getInstanceClass();
 
         //we check, if class 'node' is declared at is the same class as the one instance is class of.
-        boolean declaredInInstanceClass = declaringClass.equals(instanceClass);
+        boolean declaredInInstanceClass = declaringClass.equals(instanceClass);//TODO MM: move as instance class to TraverserNode.
 
-        if (!declaredInInstanceClass) {
+        boolean canCheckSuperClasses = !declaredInInstanceClass;
+        if (canCheckSuperClasses) {
             Optional<Type> foundType = findTypeVariableInSuperClassOfDeclaringClass(
                     declaringClass,
                     instanceClass,
@@ -137,9 +138,14 @@ public class TypeVariableUtil {
                 return Optional.of(typeFoundInParent);
             } else if (typeFoundInParent instanceof TypeVariable){
                 return findTypeVariableInSuperClassOfDeclaringClass(scanInClass, instanceClass, typeFoundInParent);
-            } else {
+            } else if (typeFoundInParent instanceof ParameterizedType) {
+                logger.debug("Found type in parent, which is parameterized type: '{}'. " +
+                        "We have to instantiate class of that type and proceed to search for generic types",
+                        typeFoundInParent);
+                //here I got: ClassWithPairHavingTypeDefinedInClass<X,Y> — so I have to instantiate this class, and continue scan for type variables X and Y
 
-                //here I got: ClassWithPairHavingTypeDefinedInClass<X,Y> — so I have to instanciate this class, and continue scan for type variables X and Y
+                throw new UnsupportedOperationException("Not implemented yet");
+            } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
         } else if (genericSuperclass instanceof Class) {
