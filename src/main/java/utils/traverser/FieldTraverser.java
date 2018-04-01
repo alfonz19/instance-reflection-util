@@ -160,39 +160,9 @@ public class FieldTraverser implements ClassTreeTraverser {
             }
         }
 
-        //-- delegated
         @Override
-        public Object getValue() {
-            return traverserNode.getValue();
-        }
-
-        @Override
-        public Type getGenericType() {
-            return traverserNode.getGenericType();
-        }
-
-        @Override
-        public Class<?> getType() {
-            return traverserNode.getType();
-        }
-
         public TraverserNode getTraverserNode() {
             return traverserNode;
-        }
-
-        @Override
-        public Class<?> getDeclaringClass() {
-            return traverserNode.getDeclaringClass();
-        }
-
-        @Override
-        public Class<?> getInstanceClass() {
-            return traverserNode.getInstanceClass();
-        }
-
-        @Override
-        public String getNodeName() {
-            return traverserNode.getNodeName();
         }
     }
 }

@@ -24,14 +24,13 @@ public class TypeVariableUtil {
     public static Type findActualTypeForTypeVariable(TypeVariable typeVariable, ClassTreeTraverserContext context) {
         logger.debug("Looking for type variable '{}' for at path '{}'", typeVariable, context.getNodesFromRootAsNamesPath());
 
-        return findActualTypeForTypeVariable(typeVariable, context, context.getNodesFromRoot().size() -1);
+        return findActualTypeForTypeVariable(typeVariable, context, context.getCurrentNode());
     }
 
     private static Type findActualTypeForTypeVariable(Type typeVariable,
                                                       ClassTreeTraverserContext context,
-                                                      int nodeIndex) {     //TODO MM: this is ugly, nodes, can have reference to previous node. Then is not needed to pass context (probably) and index.
+                                                      TraverserNode node) {
 
-        TraverserNode node = context.getNodesFromRoot().get(nodeIndex);
         logger.debug("Looking for type variable '{}' in node:\n\t\tdeclaringClass ='{}',\n\t\t instanceClass='{}'",
                 typeVariable,
                 node.getDeclaringClass(),
@@ -61,12 +60,11 @@ public class TypeVariableUtil {
 
         //scan in superclasses couldn't be used or failed. We proceed scan in node through we got here,
         //as the type variable has to be defined there.
-        if (nodeIndex >0) {
+        TraverserNode previousNode = context.getPreviousNode(node);
+        if (previousNode != null) {
             //there is some up-the-path node we can scan.
 
             logger.debug("Node is defined in instance class, not checking superclass, proceeding with node up the path.");
-            int previousNodeIndex = nodeIndex - 1;
-            TraverserNode previousNode = context.getNodesFromRoot().get(previousNodeIndex);
             Type genericTypeOfPreviousNode = previousNode.getGenericType();
             if (genericTypeOfPreviousNode instanceof Class) {
                 throw new UnsupportedOperationException("Previous node is not parameterized, which means, that type cannot be inferred.");
@@ -84,7 +82,7 @@ public class TypeVariableUtil {
 
                 if (typeToSearchFor instanceof TypeVariable) {
                     logger.debug("have to look up-the-path node for {}", typeToSearchFor);
-                    return findActualTypeForTypeVariable(typeToSearchFor, context, previousNodeIndex);
+                    return findActualTypeForTypeVariable(typeToSearchFor, context, previousNode);
                 } else {
                     throw new UnsupportedOperationException("Not implemented yet");
                 }

@@ -8,7 +8,7 @@ public class InitializingTraversingProcessor implements TraversingProcessor {
 
     @Override
     public void process(ModifiableTraverserNode modifiableNode, ClassTreeTraverserContext context) {
-        TraverserNode node = context.getCurrentNode();
+        TraverserNode node = modifiableNode.getTraverserNode();
 
         //TODO MM: decision whether to set primitive values, or all values or only null values
 //            if (node.getValue() == null) {

@@ -45,20 +45,17 @@ public class ClassTreeTraverserContext {
         return new ClassTreeTraverserContext(classTreeTraverser, newNodesFromRoot);
     }
 
-    public List<TraverserNode> getNodesFromRoot() {
-        return this.nodesFromRoot;
-    }
-
     public String getNodesFromRootAsNamesPath() {
-        return getNodesFromRoot().stream().map(TraverserNode::getNodeName).collect(Collectors.joining("."));
+        return this.nodesFromRoot.stream().map(TraverserNode::getNodeName).collect(Collectors.joining("."));
     }
 
     public TraverserNode getCurrentNode() {
         if (this.nodesFromRoot.isEmpty()) {
-            throw new IllegalStateException("Cannot get current node, when there's no current node. Traverse did not start yet?");
+            throw new IllegalStateException("Cannot get current node, when there's no current node. " +
+                    "Traverse did not start yet?");
+        } else {
+            return nodesFromRoot.get(nodesFromRoot.size() - 1);
         }
-
-        return nodesFromRoot.get(nodesFromRoot.size() - 1);
     }
 
     public Object processCurrentNodeInstance(Object instance) {
@@ -70,5 +67,18 @@ public class ClassTreeTraverserContext {
         return "ClassTreeTraverserContext{" +
             "nodesFromRootAsNamesPath='" + getNodesFromRootAsNamesPath() + '\'' +
             '}';
+    }
+
+    public TraverserNode getPreviousNode(TraverserNode node) {
+        int index = this.nodesFromRoot.indexOf(node);
+        if (index == -1) {
+            throw new IllegalArgumentException("Unknown node, failed to find it in nodesFromRoot collection.");
+        }
+
+        if (index == 0) {
+            return null;
+        }
+
+        return this.nodesFromRoot.get(index - 1);
     }
 }
