@@ -14,4 +14,6 @@ public interface TraverserNode {
     Class<?> getDeclaringClass();
 
     Class<?> getInstanceClass();
+
+    boolean declaredInInstanceClass();
 }

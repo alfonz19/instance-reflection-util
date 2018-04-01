@@ -80,20 +80,20 @@ public class FieldTraverser implements ClassTreeTraverser {
         private final Object nodeValue;
         private final Type genericType;
         private final Class<?> type;
-        private final Class<?> declaringClassOfNode;
+        private final Class<?> declaringClass;
         private final Class<?> instanceClass;
         private final String fieldName;
 
         private FieldTraverserNode(Object nodeValue,
                                    Type genericType,
                                    Class<?> type,
-                                   Class<?> declaringClassOfNode,
+                                   Class<?> declaringClass,
                                    Class<?> instanceClass,
                                    String fieldName) {
             this.nodeValue = nodeValue;
             this.genericType = genericType;
             this.type = type;
-            this.declaringClassOfNode = declaringClassOfNode;
+            this.declaringClass = declaringClass;
             this.instanceClass = instanceClass;
             this.fieldName = fieldName;
         }
@@ -120,7 +120,7 @@ public class FieldTraverser implements ClassTreeTraverser {
 
         @Override
         public Class<?> getDeclaringClass() {
-            return declaringClassOfNode;
+            return declaringClass;
         }
 
         @Override
@@ -129,9 +129,14 @@ public class FieldTraverser implements ClassTreeTraverser {
         }
 
         @Override
+        public  boolean declaredInInstanceClass() {
+            return declaringClass.equals(instanceClass);
+        }
+
+        @Override
         public String toString() {
             return "FieldTraverserNode{" +
-                "declaringClassOfNode=" + declaringClassOfNode +
+                "declaringClassOfNode=" + declaringClass +
                 ", genericType=" + genericType +
                 ", instanceClass=" + instanceClass +
                 '}';

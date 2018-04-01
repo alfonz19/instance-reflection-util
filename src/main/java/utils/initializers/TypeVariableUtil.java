@@ -38,17 +38,12 @@ public class TypeVariableUtil {
 
 
         //----//TODO MM: probably from here to and of scan in parents — this can be extracted to one method/util, since optional is used anyway.
-        Class<?> declaringClass = node.getDeclaringClass();
-        Class<?> instanceClass = node.getInstanceClass();
-
         //we check, if class 'node' is declared at is the same class as the one instance is class of.
-        boolean declaredInInstanceClass = declaringClass.equals(instanceClass);//TODO MM: move as instance class to TraverserNode.
-
-        boolean canCheckSuperClasses = !declaredInInstanceClass;
+        boolean canCheckSuperClasses = !node.declaredInInstanceClass();
         if (canCheckSuperClasses) {
             Optional<Type> foundType = findTypeVariableInSuperClassOfDeclaringClass(
-                    declaringClass,
-                    instanceClass,
+                    node.getDeclaringClass(),
+                    node.getInstanceClass(),
                     typeVariable);
 
             if (foundType.isPresent()) {
@@ -71,7 +66,8 @@ public class TypeVariableUtil {
             }
 
             if (genericTypeOfPreviousNode instanceof ParameterizedType) {
-                int indexOfTypeVariable = getIndexOfTypeVariableInGenericClassTypes(typeVariable, declaringClass);
+                int indexOfTypeVariable = getIndexOfTypeVariableInGenericClassTypes(typeVariable,
+                        node.getDeclaringClass());
 
                 Type typeToSearchFor =
                     ((ParameterizedType) genericTypeOfPreviousNode).getActualTypeArguments()[indexOfTypeVariable];
