@@ -16,6 +16,8 @@ import utils.traverser.TraverserNode;
 
 public class TypeVariableInitializer extends InitializerParent {
 
+    private final Logger logger = LoggerFactory.getLogger(TypeVariableInitializer.class);
+    private TypeVariableUtil typeVariableUtil = new TypeVariableUtil();
 
     @Override
     public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
@@ -26,20 +28,18 @@ public class TypeVariableInitializer extends InitializerParent {
     public Object getValue(Class<?> type, Type genericType, PathNode pathNode, ClassTreeTraverserContext context) {
 
         TypeVariable typeVariable = (TypeVariable) genericType;
-        Type typeOfTypeVariable = TypeVariableUtil.findActualTypeForTypeVariable(typeVariable, pathNode, context);
+        Type typeOfTypeVariable = typeVariableUtil.findActualTypeForTypeVariable(typeVariable, pathNode, context);
 
         return this.getInitializers().generateValue(typeOfTypeVariable, pathNode, context);//TODO MM: traverse over returned instance?
     }
 
-    private static class TypeVariableUtil {
-        private static final Logger logger = LoggerFactory.getLogger(TypeVariableUtil.class);
-
+    private class TypeVariableUtil {
         /**
          * @param typeVariable type variable we're looking for it's actual type.
          * @param context context describing position it traversing tree.
          * @return generic type used to define type variable.
          */
-        public static Type findActualTypeForTypeVariable(TypeVariable typeVariable, PathNode pathNode, ClassTreeTraverserContext context) {
+        public Type findActualTypeForTypeVariable(TypeVariable typeVariable, PathNode pathNode, ClassTreeTraverserContext context) {
             logger.debug("Looking for type variable '{}' for at path '{}'",
                 typeVariable,
                 pathNode.getPath().getPathAsString());
@@ -47,7 +47,7 @@ public class TypeVariableInitializer extends InitializerParent {
             return findActualTypeForTypeVariable(typeVariable, context, pathNode);
         }
 
-        private static Type findActualTypeForTypeVariable(Type typeVariable,
+        private Type findActualTypeForTypeVariable(Type typeVariable,
                                                           ClassTreeTraverserContext context,
                                                           PathNode pathNode) {
 
@@ -116,7 +116,7 @@ public class TypeVariableInitializer extends InitializerParent {
             }
         }
 
-        private static int getIndexOfTypeVariableInGenericClassTypes(Type typeVariable, Class<?> declaringClass) {
+        private int getIndexOfTypeVariableInGenericClassTypes(Type typeVariable, Class<?> declaringClass) {
             logger.debug("Searching type parameter '{}' in class '{}' definition", typeVariable, declaringClass);
 
             TypeVariable[] typeParametersOfClass = declaringClass.getTypeParameters();
@@ -131,7 +131,7 @@ public class TypeVariableInitializer extends InitializerParent {
             return indexOfTypeVariable;
         }
 
-        private static Optional<Type> findTypeVariableInSuperClassOfDeclaringClass(Class<?> declaringClass,
+        private Optional<Type> findTypeVariableInSuperClassOfDeclaringClass(Class<?> declaringClass,
                                                                                    Class<?> instanceClass,
                                                                                    Type typeVariable) {
 
