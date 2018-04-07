@@ -3,6 +3,7 @@ package utils.initializers;
 import java.lang.reflect.Type;
 
 import utils.traverser.ClassTreeTraverserContext;
+import utils.traverser.PathNode;
 
 public class BooleanInitializer extends SimpleInitializer {
     public BooleanInitializer() {
@@ -10,7 +11,7 @@ public class BooleanInitializer extends SimpleInitializer {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
+    public Object getValue(Class<?> type, Type genericType, PathNode pathNode, ClassTreeTraverserContext context) {
         return random.nextBoolean();
     }
 }

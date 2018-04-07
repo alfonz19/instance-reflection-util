@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.traverser.ClassTreeTraverserContext;
+import utils.traverser.PathNode;
 import utils.traverser.TraverserNode;
 
 public class TypeVariableUtil {
@@ -21,16 +22,19 @@ public class TypeVariableUtil {
      * @param context context describing position it traversing tree.
      * @return generic type used to define type variable.
      */
-    public static Type findActualTypeForTypeVariable(TypeVariable typeVariable, ClassTreeTraverserContext context) {
-        logger.debug("Looking for type variable '{}' for at path '{}'", typeVariable, context.getNodesFromRootAsNamesPath());
+    public static Type findActualTypeForTypeVariable(TypeVariable typeVariable, PathNode pathNode, ClassTreeTraverserContext context) {
+        logger.debug("Looking for type variable '{}' for at path '{}'",
+            typeVariable,
+            pathNode.getPath().getPathAsString());
 
-        return findActualTypeForTypeVariable(typeVariable, context, context.getCurrentNode());
+        return findActualTypeForTypeVariable(typeVariable, context, pathNode);
     }
 
     private static Type findActualTypeForTypeVariable(Type typeVariable,
                                                       ClassTreeTraverserContext context,
-                                                      TraverserNode node) {
+                                                      PathNode pathNode) {
 
+        TraverserNode node = pathNode.getTraverserNode();
         logger.debug("Looking for type variable '{}' in node:\n\t\tdeclaringClass ='{}',\n\t\t instanceClass='{}'",
                 typeVariable,
                 node.getDeclaringClass(),
@@ -55,8 +59,9 @@ public class TypeVariableUtil {
 
         //scan in superclasses couldn't be used or failed. We proceed scan in node through we got here,
         //as the type variable has to be defined there.
-        TraverserNode previousNode = context.getPreviousNode(node);
-        if (previousNode != null) {
+        if (pathNode.hasPreviousPathNode()) {
+            PathNode previousPathNode = pathNode.getPreviousPathNode();
+            TraverserNode previousNode = previousPathNode.getTraverserNode();
             //there is some up-the-path node we can scan.
 
             logger.debug("Node is defined in instance class, not checking superclass, proceeding with node up the path.");
@@ -78,7 +83,7 @@ public class TypeVariableUtil {
 
                 if (typeToSearchFor instanceof TypeVariable) {
                     logger.debug("have to look up-the-path node for {}", typeToSearchFor);
-                    return findActualTypeForTypeVariable(typeToSearchFor, context, previousNode);
+                    return findActualTypeForTypeVariable(typeToSearchFor, context, previousPathNode);
                 } else {
                     throw new UnsupportedOperationException("Not implemented yet");
                 }

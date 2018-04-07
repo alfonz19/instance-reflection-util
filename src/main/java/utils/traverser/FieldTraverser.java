@@ -3,6 +3,8 @@ package utils.traverser;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
+import utils.traverser.Path.InstancePath;
+
 public class FieldTraverser implements ClassTreeTraverser {
     private final TraversingProcessor traversingProcessor;
 
@@ -16,17 +18,17 @@ public class FieldTraverser implements ClassTreeTraverser {
     }
 
     @Override
-    public <T> T process(T instance, ClassTreeTraverserContext context) {
-        return process(instance, instance.getClass(), context);
+    public <T> T process(T instance, PathNode pathNode, ClassTreeTraverserContext context) {
+        return process(instance, instance.getClass(), pathNode, context);
     }
 
     @Override
     public <T> T process(T instance, Class<?> startClass) {
-        return process(instance, startClass, new ClassTreeTraverserContext(this));
+        return process(instance, startClass, new PathNode(new InstancePath()), new ClassTreeTraverserContext(this));
     }
 
     @Override
-    public <T> T process(T instance, Class<?> startClass, ClassTreeTraverserContext context) {
+    public <T> T process(T instance, Class<?> startClass, PathNode pathNode, ClassTreeTraverserContext context) {
         if (!startClass.isAssignableFrom(instance.getClass())) {
             throw new IllegalArgumentException();
         }
@@ -35,7 +37,7 @@ public class FieldTraverser implements ClassTreeTraverser {
         Class<Object> stopClazz = Object.class;
 
         do {
-            processFieldsInCurrentClass(instance, instanceClass, context);
+            processFieldsInCurrentClass(instance, instanceClass, pathNode, context);
             instanceClass = instanceClass.getSuperclass();
         } while (instanceClass != null && !instanceClass.isAssignableFrom(stopClazz));
 
@@ -46,6 +48,7 @@ public class FieldTraverser implements ClassTreeTraverser {
 
     private <T> void processFieldsInCurrentClass(T instance,
                                                  Class<?> instanceClass,
+                                                 PathNode pathNode,
                                                  ClassTreeTraverserContext context) {
         Field[] fields = instanceClass.getDeclaredFields();
 
@@ -58,7 +61,7 @@ public class FieldTraverser implements ClassTreeTraverser {
             TraverserNode traverserNode = createTraverserNode(instance, field);
             ModifiableTraverserNode modifiableNode = new ModifiableFieldTraverserNode(instance, field, traverserNode);
 
-            traversingProcessor.process(modifiableNode, context.subNode(traverserNode));
+            traversingProcessor.process(modifiableNode, new PathNode(pathNode, traverserNode), context);
         }
     }
 

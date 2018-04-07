@@ -7,23 +7,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 import utils.traverser.ClassTreeTraverserContext;
+import utils.traverser.PathNode;
 
 public class MapInitializer extends RandomInitializer {
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
         return Map.class.isAssignableFrom(type);
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
+    public Object getValue(Class<?> type, Type genericType, PathNode pathNode, ClassTreeTraverserContext context) {
         Map resultMap = instantiateMap(type);
 
         Type keyType = getKeyValueType(genericType, 0);
         Type valueType = getKeyValueType(genericType, 1);
 
         for(int i = 0; i < ArrayLikeInitializerParent.MAX_ITEMS_TO_CREATE_IN_COLLECTIONS; i++) {
-            Object key = getInitializers().generateValue(keyType, context);
-            Object value = getInitializers().generateValue(valueType, context);
+            Object key = getInitializers().generateValue(keyType, pathNode, context);
+            Object value = getInitializers().generateValue(valueType, pathNode, context);
             resultMap.put(key, value);
         }
 

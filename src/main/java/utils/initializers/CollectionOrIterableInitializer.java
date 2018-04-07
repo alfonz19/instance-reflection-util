@@ -7,11 +7,12 @@ import java.util.HashSet;
 import java.util.List;
 
 import utils.GenericTypeUtil;
+import utils.traverser.PathNode;
 
 public class CollectionOrIterableInitializer extends ArrayLikeInitializerParent {
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
         return Collection.class.isAssignableFrom(type) || Iterable.class.isAssignableFrom(type);
     }
 

@@ -4,11 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
 import utils.traverser.ClassTreeTraverserContext;
+import utils.traverser.PathNode;
 
 public class DefaultConstructorInitializer extends InitializerParent {
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
         try {
             if (Object.class.equals(type)) {
                 return false;
@@ -21,11 +22,11 @@ public class DefaultConstructorInitializer extends InitializerParent {
     }
 
     @Override
-    public Object getValue(Class<?> type, Type genericType, ClassTreeTraverserContext context) {
+    public Object getValue(Class<?> type, Type genericType, PathNode pathNode, ClassTreeTraverserContext context) {
         try {
             Constructor<?> publicNoArgConstructor = type.getConstructor();
             Object instance = publicNoArgConstructor.newInstance();
-            return context.processCurrentNodeInstance(instance);
+            return context.processCurrentNodeInstance(instance, pathNode);
         } catch(Exception e) {
             throw new RuntimeException(e);
         }

@@ -4,6 +4,8 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
+import utils.traverser.PathNode;
+
 public abstract class SimpleInitializer extends RandomInitializer {
 
     private final List<Class<?>> classes;
@@ -17,7 +19,7 @@ public abstract class SimpleInitializer extends RandomInitializer {
     }
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
         return classes.contains(type);
     }
 }

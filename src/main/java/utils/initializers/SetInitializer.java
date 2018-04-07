@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Set;
 
 import utils.GenericTypeUtil;
+import utils.traverser.PathNode;
 
 public class SetInitializer extends ArrayLikeInitializerParent {
 
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
         return Set.class.isAssignableFrom(type);
     }
 

@@ -6,10 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import utils.GenericTypeUtil;
+import utils.traverser.PathNode;
 
 public class ListInitializer extends ArrayLikeInitializerParent {
     @Override
-    public boolean canProvideValueFor(Class<?> type, Type genericType) {
+    public boolean canProvideValueFor(Class<?> type, Type genericType, PathNode pathNode) {
         return List.class.isAssignableFrom(type);
     }
 

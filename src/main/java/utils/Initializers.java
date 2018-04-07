@@ -20,6 +20,7 @@ import utils.initializers.StringInitializer;
 import utils.initializers.TypeVariableInitializer;
 import utils.initializers.UuidInitializer;
 import utils.traverser.ClassTreeTraverserContext;
+import utils.traverser.PathNode;
 
 public class Initializers {
     private List<Initializer> initializers = createInitializers();
@@ -46,9 +47,9 @@ public class Initializers {
         return result;
     }
 
-    public Initializer getSoleInitializer(Class<?> type, Type genericType) {
+    public Initializer getSoleInitializer(Class<?> type, Type genericType, PathNode pathNode) {
         List<Initializer> suitableInitializers = initializers.stream()
-                .filter(e -> e.canProvideValueFor(type, genericType))
+                .filter(e -> e.canProvideValueFor(type, genericType, pathNode))
                 .collect(Collectors.toList());
 
 
@@ -65,16 +66,17 @@ public class Initializers {
         return initializer;
     }
 
-    public Object generateValue(Type genericType, ClassTreeTraverserContext context) {
+    public Object generateValue(Type genericType, PathNode pathNode, ClassTreeTraverserContext context) {
         Class<?> classType = GenericTypeUtil.getClassType(genericType); //TODO MM: check if we can calculate classType from genericType properly!
-        return generateValue(classType, genericType, context);
+        return generateValue(classType, genericType, pathNode, context);
     }
 
     public Object generateValue(Class<?> type,
                                 Type genericType,
+                                PathNode pathNode,
                                 ClassTreeTraverserContext context) {
-        Initializer initializer = getSoleInitializer(type, genericType);
+        Initializer initializer = getSoleInitializer(type, genericType, pathNode);
 
-        return initializer.getValue(type, genericType, context);
+        return initializer.getValue(type, genericType, pathNode, context);
     }
 }
