@@ -3,9 +3,13 @@ package utils.traverser;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import utils.traverser.Path.InstancePath;
 
 public class FieldTraverser implements ClassTreeTraverser {
+    private final Logger logger = LoggerFactory.getLogger(FieldTraverser.class);
+
     private final TraversingProcessor traversingProcessor;
 
     public FieldTraverser(TraversingProcessor traversingProcessor) {
@@ -33,14 +37,26 @@ public class FieldTraverser implements ClassTreeTraverser {
             throw new IllegalArgumentException();
         }
 
+        logger.debug("\n\n" +
+                "--------------------------------------------------------------------------------\n" +
+                "Traversing:\n\tfrom path {}\n\tfrom instance {} ({}),\n\t starting with {}.\n" +
+                "--------------------------------------------------------------------------------\n",
+            pathNode.getPath(),
+            instance,
+            instance.getClass(),
+            startClass);
+
+
         Class<?> instanceClass = startClass;
         Class<Object> stopClazz = Object.class;
 
+        logger.debug("Analyzing class hierarchy <{}, {}) nodes in {}\n", startClass, stopClazz, instance.getClass());
         do {
+            logger.debug("Analyzing nodes in class {}", instanceClass);
             processFieldsInCurrentClass(instance, instanceClass, pathNode, context);
             instanceClass = instanceClass.getSuperclass();
         } while (instanceClass != null && !instanceClass.isAssignableFrom(stopClazz));
-
+        logger.debug("End of analyzing class hierarchy <{}, {}>nodes in {}\n", startClass, stopClazz);
 
 
         return instance;

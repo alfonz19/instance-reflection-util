@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import utils.initializers.ArrayInitializer;
 import utils.initializers.BooleanInitializer;
 import utils.initializers.CollectionOrIterableInitializer;
@@ -23,6 +25,8 @@ import utils.traverser.ClassTreeTraverserContext;
 import utils.traverser.PathNode;
 
 public class Initializers {
+    private final Logger logger = LoggerFactory.getLogger(Initializers.class);
+
     private List<Initializer> initializers = createInitializers();
 
     private List<Initializer> createInitializers() {
@@ -48,6 +52,7 @@ public class Initializers {
     }
 
     public Initializer getSoleInitializer(Class<?> type, Type genericType, PathNode pathNode) {
+        logger.debug("\n\nLooking for sole initializer for:\n\ttype={},\n\tgenericType={}\n\tat path={}", type, genericType, pathNode.getPath());
         List<Initializer> suitableInitializers = initializers.stream()
                 .filter(e -> e.canProvideValueFor(type, genericType, pathNode))
                 .collect(Collectors.toList());
@@ -58,11 +63,14 @@ public class Initializers {
             throw new IllegalStateException("Unknown initializer for type: " + genericType.getTypeName());
         }
 
-//            if (suitableInitializers.size() > 1) {
-//                throw new IllegalStateException("Multiple initializers for type: " + genericType.getTypeName());
-//            }
+
+        if (suitableInitializers.size() > 1) {
+            logger.debug("Found multiple initializers for type={}, genericType={} at path={}", type, genericType, pathNode.getPath());
+            //    throw new IllegalStateException("Multiple initializers for type: " + genericType.getTypeName());  //TODO MM: exception?
+        }
 
         Initializer initializer = suitableInitializers.get(0);
+        logger.debug("Using initializer {} for:\n\t type={},\n\t genericType={}\n\t at path={}", initializer.getClass(), type, genericType, pathNode.getPath());
         return initializer;
     }
 

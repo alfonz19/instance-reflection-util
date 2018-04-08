@@ -40,7 +40,7 @@ public class TypeVariableInitializer extends InitializerParent {
          * @return generic type used to define type variable.
          */
         public Type findActualTypeForTypeVariable(TypeVariable typeVariable, PathNode pathNode, ClassTreeTraverserContext context) {
-            logger.debug("Looking for type variable '{}' for at path '{}'",
+            logger.debug("Looking for type variable '{}' at path '{}'",
                 typeVariable,
                 pathNode.getPath().getPathAsString());
 

@@ -359,6 +359,19 @@ public class InstanceReflectionUtilTest {
     }
 
     @Test
+    public void testClassReferencingClassWithGenericType() {
+        ClassReferencingClassWithGenericType<String> instance =
+            traverser.process(new ClassReferencingClassWithGenericType<String>() {});
+
+        assertThat(instance.aggregatedClass, notNullValue());
+        assertThat(instance.aggregatedClass, isA(ClassWithGenericType.class));
+        assertThat(instance.aggregatedClass.t, notNullValue());
+        assertThat(instance.aggregatedClass.t, isA(String.class));
+        assertTrue(instance.aggregatedClass.t.length() > 0);
+
+    }
+
+    @Test
     public void testClassWithGenericTypeGenericArray() {
         ClassWithGenericType<String[]> instance =
             traverser.process(new ClassWithGenericType<String[]>() {});
@@ -440,6 +453,10 @@ public class InstanceReflectionUtilTest {
 
     public static class ClassWithGenericType<T> {
         public T t;
+    }
+
+    public static class ClassReferencingClassWithGenericType<T> {
+        public ClassWithGenericType<T> aggregatedClass;
     }
 
     public static class SubClassWithGenericType<K> extends ClassWithGenericType<K>{

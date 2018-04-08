@@ -8,14 +8,13 @@ import java.util.Objects;
 public interface Path {
     String PATH_SEPARATOR = ".";
     String ROOT_PATH = null;
+    String ROOT_PATH_STRING = "<ROOT>";
 
     String getPathAsString();
 
     InstancePath createSubPath(TraverserNode node);
 
-    default boolean isRootPath() {
-        return getPathAsString() == null;
-    }
+    boolean isRootPath();
 
     public static class InstancePath implements Path {
 
@@ -33,7 +32,16 @@ public interface Path {
         }
 
         @Override
+        public boolean isRootPath() {
+            return Objects.equals(ROOT_PATH, path);
+        }
+
+        @Override
         public String getPathAsString() {
+            if (isRootPath()) {
+                return ROOT_PATH_STRING;
+            }
+
             return path;
         }
 
@@ -44,7 +52,12 @@ public interface Path {
                 throw new IllegalArgumentException();
             }
 
-            return new InstancePath(this.path == null ? nodeName : this.path + PATH_SEPARATOR + nodeName);
+            return new InstancePath(isRootPath() ? nodeName : this.path + PATH_SEPARATOR + nodeName);
+        }
+
+        @Override
+        public String toString() {
+            return getPathAsString();
         }
     }
 }
