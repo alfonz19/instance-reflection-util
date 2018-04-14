@@ -54,11 +54,12 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testClassWithList()  {
-        assertThat(traverser.process(new ClassWithList()).list, notNullValue());
+        ClassWithList actual = traverser.process(new ClassWithList());
+        assertThat(actual.list, notNullValue());
 
-        //iterable does not know about size/emptiness.
+        //Iterable does not know about size/emptiness.
         int itemCount = 0;
-        for (B b : traverser.process(new ClassWithList()).list) {
+        for (B b : actual.list) {
             itemCount++;
             assertThat(b.i, notNullValue());
             assertThat(b.ii, notNullValue());
@@ -68,11 +69,12 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testClassWithCollection()  {
-        assertThat(traverser.process(new ClassWithCollection()).collection, notNullValue());
+        ClassWithCollection actual = traverser.process(new ClassWithCollection());
+        assertThat(actual.collection, notNullValue());
 
         //iterable does not know about size/emptiness.
         int itemCount = 0;
-        for (B b : traverser.process(new ClassWithCollection()).collection) {
+        for (B b : actual.collection) {
             itemCount++;
             assertThat(b.i, notNullValue());
             assertThat(b.ii, notNullValue());
@@ -82,11 +84,12 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testClassWithIterable()  {
-        assertThat(traverser.process(new ClassWithIterable()).iterable, notNullValue());
+        ClassWithIterable actual = traverser.process(new ClassWithIterable());
+        assertThat(actual.iterable, notNullValue());
 
         //iterable does not know about size/emptiness.
         int itemCount = 0;
-        for (B b : traverser.process(new ClassWithIterable()).iterable) {
+        for (B b : actual.iterable) {
             itemCount++;
             assertThat(b.i, notNullValue());
             assertThat(b.ii, notNullValue());
