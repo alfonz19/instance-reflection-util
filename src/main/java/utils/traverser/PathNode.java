@@ -1,14 +1,25 @@
 package utils.traverser;
 
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents two dimensional state in processing Classes/instances. Identifies position from root Class/instance and place in class hierarchy of that Class/instance.
  */
 public class PathNode {
+    private final Logger logger = LoggerFactory.getLogger(PathNode.class);
+
     private final PathNode previousPathNode;
     private final Path path;
     private final TraverserNode traverserNode;
+    private Map<TypeVariable, Type> typeVariableMap = new HashMap<>(); //TODO MM: make final
 
     /**
      * Denotes at which Class in traverserNode.getDeclaringClass class hierarchy we should do upcoming processing.
@@ -76,6 +87,18 @@ public class PathNode {
 
     public TraverserNode getTraverserNode() {
         return traverserNode;
+    }
+
+    public Optional<Type> getTypeOfTypeVariable(TypeVariable typeVariable) {
+        return Optional.ofNullable(typeVariableMap.get(typeVariable));
+    }
+
+    public void setTypeVariableMap(Map<TypeVariable, Type> typeVariableMap) {
+        if (this.typeVariableMap != null) {
+            throw new IllegalStateException("Type variable map was already set");
+        }
+
+        this.typeVariableMap = Objects.requireNonNull(typeVariableMap);
     }
 
     public Class<?> getProcessTraverserNodeAtClass() {

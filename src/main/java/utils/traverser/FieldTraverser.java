@@ -2,6 +2,11 @@ package utils.traverser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +44,7 @@ public class FieldTraverser implements ClassTreeTraverser {
 
         logger.debug("\n\n" +
                 "--------------------------------------------------------------------------------\n" +
-                "Traversing:\n\tfrom path {}\n\tfrom instance {} ({}),\n\t starting with {}.\n" +
+                "Traversing:\n\tfrom path: '{}'\n\tfrom instance: '{}' ({}),\n\t starting with: '{}'.\n" +
                 "--------------------------------------------------------------------------------\n",
             pathNode.getPath(),
             instance,
@@ -49,10 +54,25 @@ public class FieldTraverser implements ClassTreeTraverser {
 
         Class<?> instanceClass = startClass;
         Class<Object> stopClazz = Object.class;
+        //we're looping from instance class to it's top most parent. So this subclass is genericSuperclass of class from preceding loop.
+        Type genericSuperclassOfSubclass = null;
 
         logger.debug("Analyzing class hierarchy <{}, {}) nodes in {}\n", startClass, stopClazz, instance.getClass());
         do {
             logger.debug("Analyzing nodes in class {}", instanceClass);
+
+
+            //this is what is written after extends keyword.
+            Type genericSuperclass = instanceClass.getGenericSuperclass();
+            //these are declared type parameters in class.
+            TypeVariable<? extends Class<?>>[] typeParameters = instanceClass.getTypeParameters();
+
+            //TODO MM: this does not require modifiable path node. Extract to method, calculate before new pathnode is created.
+            resolveTypeParametersInClassHierarchy(instanceClass, genericSuperclassOfSubclass, typeParameters)
+                .ifPresent(pathNode::setTypeVariableMap);
+
+            genericSuperclassOfSubclass = genericSuperclass;
+
             processFieldsInCurrentClass(instance, instanceClass, pathNode, context);
             instanceClass = instanceClass.getSuperclass();
         } while (instanceClass != null && !instanceClass.isAssignableFrom(stopClazz));
@@ -60,6 +80,41 @@ public class FieldTraverser implements ClassTreeTraverser {
 
 
         return instance;
+    }
+
+    private Optional<Map<TypeVariable, Type>> resolveTypeParametersInClassHierarchy(Class<?> instanceClass,
+                                                                   Type genericSuperclassOfSubclass,
+                                                                   TypeVariable<? extends Class<?>>[] typeParameters) {
+        //there are type parameters to be resolved.
+        if (typeParameters.length > 0) {
+            if (!ReflectUtil.isParameterizedType(genericSuperclassOfSubclass)) {
+                logger.debug("Unable to determine type parameters {} from class hierarchy scan, subclass of {} is not parameterized", typeParameters, instanceClass);
+                return Optional.empty();
+            } else {
+                Map<TypeVariable, Type> result = new HashMap<>();
+
+                List<Type> typeListOfSubclass = ReflectUtil.getActualArgumentsList(genericSuperclassOfSubclass);
+                for (int index = 0, typeParametersLength = typeParameters.length; index < typeParametersLength; index++) {
+                    TypeVariable<? extends Class<?>> typeParameter = typeParameters[index];
+                    if (index >= typeListOfSubclass.size()) {
+                        logger.info(
+                            "Unable to determine type parameter {}, subclass of {} does not contain definition for it.",
+                            typeParameter,
+                            instanceClass);
+                    } else {
+                        Type type = typeListOfSubclass.get(index);
+//                            pathNode.setTypeOfTypeVariable(typeParameter, type);
+                        result.put(typeParameter, type);
+                    }
+                }
+
+                logger.debug("Resolved type varibles:{}", result);
+                return Optional.of(result);
+            }
+
+        } else {
+            return Optional.empty();
+        }
     }
 
     private <T> void processFieldsInCurrentClass(T instance,
