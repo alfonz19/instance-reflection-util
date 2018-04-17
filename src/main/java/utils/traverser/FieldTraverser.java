@@ -1,15 +1,15 @@
 package utils.traverser;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.InstanceReflectionUtilException;
 import utils.traverser.Path.InstancePath;
 
 public class FieldTraverser implements ClassTreeTraverser {
@@ -68,8 +68,8 @@ public class FieldTraverser implements ClassTreeTraverser {
             TypeVariable<? extends Class<?>>[] typeParameters = instanceClass.getTypeParameters();
 
             //TODO MM: this does not require modifiable path node. Extract to method, calculate before new pathnode is created.
-            resolveTypeParametersInClassHierarchy(instanceClass, genericSuperclassOfSubclass, typeParameters)
-                .ifPresent(pathNode::setTypeVariableMap);
+            resolveTypeParametersInClassHierarchy(instanceClass, genericSuperclassOfSubclass, typeParameters, pathNode);
+
 
             genericSuperclassOfSubclass = genericSuperclass;
 
@@ -82,17 +82,15 @@ public class FieldTraverser implements ClassTreeTraverser {
         return instance;
     }
 
-    private Optional<Map<TypeVariable, Type>> resolveTypeParametersInClassHierarchy(Class<?> instanceClass,
-                                                                   Type genericSuperclassOfSubclass,
-                                                                   TypeVariable<? extends Class<?>>[] typeParameters) {
+    private void resolveTypeParametersInClassHierarchy(Class<?> instanceClass,
+                                                                                    Type genericSuperclassOfSubclass,
+                                                                                    TypeVariable<? extends Class<?>>[] typeParameters,
+                                                                                    PathNode pathNode) {
         //there are type parameters to be resolved.
         if (typeParameters.length > 0) {
             if (!ReflectUtil.isParameterizedType(genericSuperclassOfSubclass)) {
                 logger.debug("Unable to determine type parameters {} from class hierarchy scan, subclass of {} is not parameterized", typeParameters, instanceClass);
-                return Optional.empty();
             } else {
-                Map<TypeVariable, Type> result = new HashMap<>();
-
                 List<Type> typeListOfSubclass = ReflectUtil.getActualArgumentsList(genericSuperclassOfSubclass);
                 for (int index = 0, typeParametersLength = typeParameters.length; index < typeParametersLength; index++) {
                     TypeVariable<? extends Class<?>> typeParameter = typeParameters[index];
@@ -104,16 +102,29 @@ public class FieldTraverser implements ClassTreeTraverser {
                     } else {
                         Type type = typeListOfSubclass.get(index);
 //                            pathNode.setTypeOfTypeVariable(typeParameter, type);
-                        result.put(typeParameter, type);
+
+                        //found type is already known type variable, substitute it.
+                        if (type instanceof TypeVariable) {
+                            Optional<Type> val = pathNode.getTypeOfTypeVariable((TypeVariable) type);
+                            if (val.isPresent()) {
+                                pathNode.setTypeOfTypeVariable(typeParameter, val.get());
+                                logger.debug("Resolved type variable '{}' as ''", typeParameter, val.get());
+                            } else {
+                                throw new UnsupportedOperationException("Not implemented yet");
+                            }
+                        } else if (type instanceof Class) {
+                            pathNode.setTypeOfTypeVariable(typeParameter, type);
+                            logger.debug("Resolved type variable '{}' as ''", typeParameter, type);
+                        } else if (type instanceof ParameterizedType) {
+                            ParameterizedType asParameterizedType = (ParameterizedType) type;
+                            pathNode.setTypeOfTypeVariable(typeParameter, asParameterizedType);
+                        } else {
+                            throw new UnsupportedOperationException("Not implemented yet");
+                        }
                     }
                 }
 
-                logger.debug("Resolved type varibles:{}", result);
-                return Optional.of(result);
             }
-
-        } else {
-            return Optional.empty();
         }
     }
 
@@ -145,7 +156,7 @@ public class FieldTraverser implements ClassTreeTraverser {
                 instance.getClass(),
                 field.getName());
         } catch (Exception e) {
-            throw new RuntimeException();
+            throw new InstanceReflectionUtilException(e);
         }
     }
 
@@ -235,7 +246,7 @@ public class FieldTraverser implements ClassTreeTraverser {
             try {
                 field.set(instance, value);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new InstanceReflectionUtilException(e);
             }
         }
 

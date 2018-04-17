@@ -19,7 +19,7 @@ import utils.initializers.ListInitializer;
 import utils.initializers.MapInitializer;
 import utils.initializers.SetInitializer;
 import utils.initializers.StringInitializer;
-import utils.initializers.TypeVariableInitializer;
+import utils.initializers.TypeVariableInitializer2;
 import utils.initializers.UuidInitializer;
 import utils.traverser.ClassTreeTraverserContext;
 import utils.traverser.PathNode;
@@ -44,7 +44,7 @@ public class Initializers {
                 new StringInitializer(),
                 new EnumInitializer(),
 
-                new TypeVariableInitializer(),
+                new TypeVariableInitializer2(),
                 new DefaultConstructorInitializer());
 
         result.forEach(e->e.setInitializers(this));
@@ -60,7 +60,7 @@ public class Initializers {
 
         //TODO MM: allow to configure.
         if (suitableInitializers.isEmpty()) {
-            throw new IllegalStateException("Unknown initializer for type: " + genericType.getTypeName());
+            throw new InstanceReflectionUtilException("Unknown initializer for type: " + genericType.getTypeName());
         }
 
 

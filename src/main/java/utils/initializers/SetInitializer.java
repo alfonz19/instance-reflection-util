@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import utils.GenericTypeUtil;
+import utils.InstanceReflectionUtilException;
 import utils.traverser.PathNode;
 
 public class SetInitializer extends ArrayLikeInitializerParent {
@@ -31,7 +32,7 @@ public class SetInitializer extends ArrayLikeInitializerParent {
                 result.addAll(items);
                 return result;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new InstanceReflectionUtilException(e);
             }
         }
     }

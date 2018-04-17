@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import utils.InstanceReflectionUtilException;
 import utils.traverser.ClassTreeTraverserContext;
 import utils.traverser.PathNode;
 
@@ -37,7 +38,7 @@ public class MapInitializer extends RandomInitializer {
 
             return parameterizedType.getActualTypeArguments()[index];
         } else {
-            throw new RuntimeException("Unknown type of instances to be created.");
+            throw new InstanceReflectionUtilException("Unknown type of instances to be created.");
         }
     }
 
@@ -55,7 +56,7 @@ public class MapInitializer extends RandomInitializer {
                 //noinspection uncheckbed
                 return result;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new InstanceReflectionUtilException(e);
             }
         }
     }

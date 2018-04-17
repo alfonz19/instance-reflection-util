@@ -325,8 +325,9 @@ public class InstanceReflectionUtilTest {
     public void testClassWithPairHavingTypeDefinedInClass_impossible()  {
         ClassWithPairHavingTypeDefinedInClass<String, Integer> instance = new ClassWithPairHavingTypeDefinedInClass<>();
 
-        this.expectedException.expect(RuntimeException.class);
-        this.expectedException.expectMessage("Unable to determine type, due to type erasure or object tree.");
+        this.expectedException.expect(InstanceReflectionUtilException.class);
+//        this.expectedException.expectMessage("Unable to determine type, due to type erasure or object tree.");
+        this.expectedException.expectMessage("Unable to find actual type for type variable TT.");
         ClassWithPairHavingTypeDefinedInClass<String, Integer> process = traverser.process(instance);
     }
 
@@ -352,8 +353,7 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testClassWithGenericType() {
-        ClassWithGenericType<String> instance =
-            traverser.process(new ClassWithGenericType<String>() {});
+        ClassWithGenericType<String> instance = traverser.process(new ClassWithGenericType<String>() {});
 
         assertThat(instance.t, notNullValue());
         assertThat(instance.t, isA(String.class));
@@ -405,8 +405,7 @@ public class InstanceReflectionUtilTest {
 
     @Test
     public void testSubClassWithGenericType() {
-        SubClassWithGenericType<String> instance =
-            traverser.process(new SubClassWithGenericType<String>() {});
+        SubClassWithGenericType<String> instance = traverser.process(new SubClassWithGenericType<String>() {});
 
         assertThat(instance.t, notNullValue());
         assertThat(instance.t, isA(String.class));

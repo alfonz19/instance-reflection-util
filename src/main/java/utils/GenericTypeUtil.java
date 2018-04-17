@@ -64,7 +64,7 @@ public class GenericTypeUtil {
 
     public static Type typeOfListSetElements(Type genericType) {
         if (genericType instanceof Class) {
-            throw new RuntimeException("Unknown type of instances to be created.");
+            throw new InstanceReflectionUtilException("Unknown type of instances to be created.");
         } else if (genericType instanceof ParameterizedType) {
 
             ParameterizedType parameterizedType = (ParameterizedType) genericType;
@@ -75,7 +75,7 @@ public class GenericTypeUtil {
             GenericArrayType genericArrayType = (GenericArrayType) genericType;
             return genericArrayType.getGenericComponentType();
         } else {
-            throw new RuntimeException("Unknown type of instances to be created.");
+            throw new InstanceReflectionUtilException("Unknown type of instances to be created.");
         }
     }
 }

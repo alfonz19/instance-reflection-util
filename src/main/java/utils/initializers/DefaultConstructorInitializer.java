@@ -3,6 +3,7 @@ package utils.initializers;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
+import utils.InstanceReflectionUtilException;
 import utils.traverser.ClassTreeTraverserContext;
 import utils.traverser.PathNode;
 
@@ -28,7 +29,7 @@ public class DefaultConstructorInitializer extends InitializerParent {
             Object instance = publicNoArgConstructor.newInstance();
             return context.processCurrentNodeInstance(instance, pathNode);
         } catch(Exception e) {
-            throw new RuntimeException(e);
+            throw new InstanceReflectionUtilException(e);
         }
     }
 }

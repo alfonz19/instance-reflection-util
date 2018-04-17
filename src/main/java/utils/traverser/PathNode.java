@@ -19,7 +19,7 @@ public class PathNode {
     private final PathNode previousPathNode;
     private final Path path;
     private final TraverserNode traverserNode;
-    private Map<TypeVariable, Type> typeVariableMap = new HashMap<>(); //TODO MM: make final
+    private final Map<TypeVariable, Type> typeVariableMap = new HashMap<>();
 
     /**
      * Denotes at which Class in traverserNode.getDeclaringClass class hierarchy we should do upcoming processing.
@@ -70,7 +70,7 @@ public class PathNode {
     }
 
     public boolean hasPreviousPathNode() {
-        return previousPathNode != null && !previousPathNode.rootNode;
+        return previousPathNode != null/* && !previousPathNode.rootNode*/;
     }
     
     public PathNode getPreviousPathNode() {
@@ -90,15 +90,25 @@ public class PathNode {
     }
 
     public Optional<Type> getTypeOfTypeVariable(TypeVariable typeVariable) {
+        if (typeVariableMap == null) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(typeVariableMap.get(typeVariable));
     }
 
-    public void setTypeVariableMap(Map<TypeVariable, Type> typeVariableMap) {
-        if (this.typeVariableMap != null) {
-            throw new IllegalStateException("Type variable map was already set");
+    public void setTypeOfTypeVariable(TypeVariable typeVariable, Type type) {
+        Optional<Type> optional = getTypeOfTypeVariable(typeVariable);
+        if (optional.isPresent()) {
+            if (!optional.get().equals(type)) {
+                logger.warn(
+                    "Trying to set type variable {} to {}, but this varible is already resolved as {}. Ignoring request.",
+                    typeVariable,
+                    type,
+                    optional.get());
+            }
+        } else {
+            typeVariableMap.put(typeVariable, type);
         }
-
-        this.typeVariableMap = Objects.requireNonNull(typeVariableMap);
     }
 
     public Class<?> getProcessTraverserNodeAtClass() {
@@ -111,5 +121,9 @@ public class PathNode {
         }
         
         this.processTraverserNodeAtClass = newProcessTraverserNodeAtClass;
+    }
+
+    public boolean isRootNode() {
+        return rootNode;
     }
 }

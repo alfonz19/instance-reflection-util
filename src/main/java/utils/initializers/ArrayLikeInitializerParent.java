@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import utils.GenericTypeUtil;
+import utils.InstanceReflectionUtilException;
 import utils.traverser.ClassTreeTraverserContext;
 import utils.traverser.PathNode;
 
@@ -27,7 +28,7 @@ public abstract class ArrayLikeInitializerParent extends RandomInitializer {
                 //noinspection unchecked
                 result.add(newInstance);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new InstanceReflectionUtilException(e);
             }
         }
 
